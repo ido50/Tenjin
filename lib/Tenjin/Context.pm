@@ -83,7 +83,7 @@ L<Tenjin>.
 
 =head1 AUTHOR
 
-Tenjin is developed by Makoto Kuwata at L<<a href="http://www.kuwata-lab.com/tenjin/">kuwata-lab.com</a>>. Version 0.0.3 was tidied and CPANized from the original 0.0.2 source by Ido Perelmutter E<lt>ido50@yahoo.comE<gt>.
+Tenjin is developed by Makoto Kuwata at L<http://www.kuwata-lab.com/tenjin/>. Version 0.03 was tidied and CPANized from the original 0.0.2 source by Ido Perelmutter E<lt>ido50@yahoo.comE<gt>.
 
 =head1 COPYRIGHT & LICENSE
 

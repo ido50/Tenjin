@@ -20,4 +20,4 @@ requires:
   perl: 5.8.0
 resources:
   license: http://www.opensource.org/licenses/mit-license.php
-version: 0.03
+version: 0.031

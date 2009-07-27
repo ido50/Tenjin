@@ -9,7 +9,7 @@ use Tenjin::Util;
 
 use strict;
 
-our $VERSION = 0.03;
+our $VERSION = 0.031;
 our $USE_STRICT = 0;
 
 __PACKAGE__;
@@ -26,7 +26,7 @@ Tenjin - Fast templating engine with support for embedded Perl.
 
 	use Tenjin;
 	$Tenjin::USE_STRICT = 1; # use strict in the embedded Perl inside
-							 # your templates. Optional but recommended.
+				 # your templates. Optional but recommended.
 
 	my $engine = new Tenjin::Engine();
 	my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
@@ -37,21 +37,46 @@ Tenjin - Fast templating engine with support for embedded Perl.
 =head1 DESCRIPTION
 
 Tenjin is a very fast and full-featured templating engine, implemented in several programming languages.
-It supports embedded Perl, nestable layout template, other templates inclusion, capture parts of or the
-entire template, file and memory caching, template arguments and preprocessing.
+It supports embedded Perl, nestable layout template, inclusion of other templates inside a template,
+capturing parts of or the entire template output, file and memory caching, template arguments and preprocessing.
+
+Tenjin also comes with a command line application, C<pltenjin>, for rendering templates. For example,
+C<pltenjin example.html> will render the template stored in the example.html file. You can also convert
+a template to Perl code by using C<pltenjin -s example.html>. This is the code used internally
+by Tenjin when rendering templates. There are more options, checkout SEE ALSO for links to the usage guides.
 
 =head1 SEE ALSO
 
-See L<<a href="http://www.kuwata-lab.com/tenjin/pltenjin-users-guide.html">detailed usage guide</a>>,
-L<<a href="http://www.kuwata-lab.com/tenjin/pltenjin-examples.html">examples</a>> and
-L<<a href="http://www.kuwata-lab.com/tenjin/pltenjin-faq.html">frequently asked questions</a>> in the
-kuwata-lab.com website.
+The original Tenjin website is located at L<http://www.kuwata-lab.com/tenjin/>. In there check out
+L<http://www.kuwata-lab.com/tenjin/pltenjin-users-guide.html> for detailed usage guide,
+L<http://www.kuwata-lab.com/tenjin/pltenjin-examples.html> for examples, and
+L<http://www.kuwata-lab.com/tenjin/pltenjin-faq.html> for frequently asked questions.
+
+Note that the Perl version of Tenjin is refered to as plTenjin on the Tenjin website,
+and that, as oppose to this module, the website suggests using a .plhtml extension
+for the templates instead of .html (this is entirely your choice).
 
 L<Tenjin::Engine>, L<Tenjin::Template>, L<Catalyst::View::Tenjin>.
 
+=head1 TODO
+
+=over
+
+=item * Check if all the sub-modules (like L<Tenjin::Context>, L<Tenjin::HTML>, etc.) are really necessary.
+
+=item * In particular, check if L<Tenjin::HTML> can be replaced with some existing CPAN module.
+
+=item * Add the documentation files linked in SEE ALSO to the module distribution, like in the original Tenjin.
+
+=item * Expand the description of this module.
+
+=item * Create tests, adapted from the tests provided by the original Tenjin.
+
+=back
+
 =head1 AUTHOR
 
-Tenjin is developed by Makoto Kuwata at L<<a href="http://www.kuwata-lab.com/tenjin/">kuwata-lab.com</a>>. Version 0.03 was tidied and CPANized from the original 0.0.2 source by Ido Perelmutter E<lt>ido50@yahoo.comE<gt>.
+Tenjin is developed by Makoto Kuwata at L<http://www.kuwata-lab.com/tenjin/>. Version 0.03 was tidied and CPANized from the original 0.0.2 source by Ido Perelmutter E<lt>ido50@yahoo.comE<gt>.
 
 =head1 COPYRIGHT & LICENSE
 

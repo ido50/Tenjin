@@ -9,6 +9,8 @@ perl_version '5.008';
 name 'Tenjin';
 all_from 'lib/Tenjin.pm';
 
+install_script 'pltenjin';
+
 test_requires 'Test::More';
 
 auto_install;
