@@ -1,0 +1,23 @@
+---
+abstract: 'Fast templating engine with support for embedded Perl.'
+author:
+  - 'Makoto Kuwata'
+  - 'Ido Perelmutter <ido50@yahoo.com>'
+build_requires:
+  Test::More: 0
+distribution_type: module
+generated_by: 'Module::Install version 0.77'
+license: MIT
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Tenjin
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  perl: 5.8.0
+resources:
+  license: http://www.opensource.org/licenses/mit-license.php
+version: 0.03
