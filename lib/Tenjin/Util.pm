@@ -1,6 +1,7 @@
 package Tenjin::Util;
 
 use Fcntl qw/:flock/;
+use Encode;
 
 use strict;
 
@@ -16,7 +17,7 @@ sub read_file {
 	my @buf = ();
 
 	while (read(IN, my $data, $size)) {
-		push(@buf, $data);
+		push(@buf, decode($Tenjin::ENCODING, $data));
 	}
 
 	close(IN);

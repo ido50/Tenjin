@@ -18,6 +18,7 @@ no_index:
     - t
 requires:
   perl: 5.8.0
+  Encode: 0
 resources:
   license: http://www.opensource.org/licenses/mit-license.php
-version: 0.031
+version: 0.04

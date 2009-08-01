@@ -6,14 +6,21 @@ sub new {
 	my ($class, $options) = @_;
 
 	my $this = {};
-	foreach (qw[prefix postfix layout path cache preprocess templateclass]) {
-		$this->{$_} = delete($options->{$_});
+	foreach (qw[prefix postfix layout path cache preprocess templateclass strict encoding]) {
+		$this->{$_} = delete $options->{$_};
 	}
-	$this->{cache} = 1 unless defined($this->{cache});
+	$this->{cache} = 1 unless defined $this->{cache};
 	$this->{init_opts_for_template} = $options;
 	$this->{templates} = {};
-	$this->{prefix} = '' if (! $this->{prefix});
-	$this->{postfix} = '' if (! $this->{postfix});
+	$this->{prefix} = '' unless $this->{prefix};
+	$this->{postfix} = '' unless $this->{postfix};
+
+	if ($this->{encoding}) {
+		$Tenjin::ENCODING = $this->{encoding};
+	}
+	if (defined $this->{strict}) {
+		$Tenjin::USE_STRICT = $this->{strict};
+	}
 
 	return bless($this, $class);
 }
@@ -188,7 +195,71 @@ Tenjin::Engine - Tenjin's engine.
 
 =head1 SYNOPSIS
 
-	used internally. See L<Tenjin> for usage details.
+	use Tenjin;
+
+	$Tenjin::USE_STRICT = 1;	# use strict in the embedded Perl inside
+					# your templates. Recommended, but not used
+					# by default.
+
+	$Tenjin::ENCODING = "utf8";	# set the encoding of your template files
+					# to utf8. This is the default encoding used
+					# so there's no need to do this if your
+					# templates really are utf8.
+
+	my $engine = new Tenjin::Engine(\%options);
+	my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
+	my $filename = 'file.html';
+	my $output = $engine->render($filename, $context);
+	print $output;
+
+=head1 METHODS
+
+=head2 new \%options
+
+This creates a new instant of Tenjin::Engine. C<\%options> is a hash-ref
+containing Tenjin's configuration options:
+
+=over
+
+=item * B<path> - Array-ref of filesystem paths where templates will be searched
+
+=item * B<prefix> - A string that will be automatically prepended to template names
+		 when searching for them in the path. Empty by default.
+
+=item * B<postfix> - The default extension to be automtically appended to template names
+		  when searching for them in the path. Don't forget to include the
+		  dot, such as '.html'. Empty by default.
+
+=item * B<cache> - If set to 1 (the default), compiled templates will be cached on the
+		filesystem.
+
+=item * B<preprocess> - Enable template preprocessing (turned off by default). Only
+		     use if you're actually using any preprocessed Perl code in
+		     your templates.
+
+=item * B<layout> - Name of a layout template that can be optionally used. If set,
+		 templates will be automatically inserted into the layout template,
+		 in the location where you use C<[== $_content ==]>.
+
+=item * B<strict> - Another way to make Tenjin use strict on embedded Perl code (turned
+		 off by default).
+
+=item * B<encoding> - Another way to set the encoding of your template files (set to utf8
+		   by default).
+
+=back
+
+=head2 render $tmpl_name, [\%context, $layout]
+
+Renders a template whose name is identified by C<$tmpl_name>. Remember that a prefix
+and a postfix might be added if they where set when creating the Tenjin::Engine instant.
+
+C<$context> is a hash-ref containing the variables that will be available for usage inside
+the templates. So, for example, if your C<\%context> is { message => 'Hi there }, then
+you can use C<$message> inside your templates.
+
+C<$layout> is a flag denoting whether or not to render this template into the layout template
+there was set when creating the Tenjin::Engine instant.
 
 =head1 SEE ALSO
 

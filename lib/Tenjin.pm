@@ -9,8 +9,9 @@ use Tenjin::Util;
 
 use strict;
 
-our $VERSION = 0.031;
+our $VERSION = 0.04;
 our $USE_STRICT = 0;
+our $ENCODING = "utf8";
 
 __PACKAGE__;
 
@@ -25,10 +26,17 @@ Tenjin - Fast templating engine with support for embedded Perl.
 =head1 SYNOPSIS
 
 	use Tenjin;
-	$Tenjin::USE_STRICT = 1; # use strict in the embedded Perl inside
-				 # your templates. Optional but recommended.
 
-	my $engine = new Tenjin::Engine();
+	$Tenjin::USE_STRICT = 1;	# use strict in the embedded Perl inside
+					# your templates. Recommended, but not used
+					# by default.
+
+	$Tenjin::ENCODING = "utf8";	# set the encoding of your template files
+					# to utf8. This is the default encoding used
+					# so there's no need to do this if your
+					# templates really are utf8.
+
+	my $engine = new Tenjin::Engine(\%options);
 	my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
 	my $filename = 'file.html';
 	my $output = $engine->render($filename, $context);
@@ -44,6 +52,8 @@ Tenjin also comes with a command line application, C<pltenjin>, for rendering te
 C<pltenjin example.html> will render the template stored in the example.html file. You can also convert
 a template to Perl code by using C<pltenjin -s example.html>. This is the code used internally
 by Tenjin when rendering templates. There are more options, checkout SEE ALSO for links to the usage guides.
+
+For detailed usage instructions see L<Tenjin::Engine>.
 
 =head1 SEE ALSO
 
@@ -64,7 +74,7 @@ L<Tenjin::Engine>, L<Tenjin::Template>, L<Catalyst::View::Tenjin>.
 
 =item * Check if all the sub-modules (like L<Tenjin::Context>, L<Tenjin::HTML>, etc.) are really necessary.
 
-=item * In particular, check if L<Tenjin::HTML> can be replaced with some existing CPAN module.
+=item * In particular, check if L<Tenjin::HTML> can be replaced with some existing CPAN module (HTML::Tiny was suggested).
 
 =item * Add the documentation files linked in SEE ALSO to the module distribution, like in the original Tenjin.
 
