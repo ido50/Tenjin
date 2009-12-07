@@ -1,6 +1,7 @@
 package Tenjin::Preprocessor;
 
 use strict;
+use warnings;
 
 our @ISA = ('Tenjin::Template');
 
@@ -13,10 +14,10 @@ sub expr_pattern {
 }
 
 sub add_expr {
-	my ($this, $bufref, $expr, $flag_escape) = @_;
+	my ($self, $bufref, $expr, $flag_escape) = @_;
 
-	$expr = "Tenjin::Util::_decode_params($expr)";
-	$this->SUPER::add_expr($bufref, $expr, $flag_escape);
+	$expr = "$self->{utils}->_decode_params($expr)";
+	$self->SUPER::add_expr($bufref, $expr, $flag_escape);
 }
 
 __PACKAGE__;

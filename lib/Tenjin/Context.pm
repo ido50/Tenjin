@@ -1,67 +1,84 @@
 package Tenjin::Context;
 
 use strict;
+use warnings;
 
 sub new {
-	my ($class, $this) = @_;
+	my ($class, $self) = @_;
 
-	$this = {} unless defined($this);
-	return bless($this, $class);
+	$self = {} unless defined $self;
+	return bless $self, $class;
 }
 
 sub evaluate {
-	my ($this, $_script) = @_;
+	my ($self, $_script, $_filename) = @_;
 
-	return $this->to_func($_script)->($this);
+	my $_context = $self;
+	$_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+	my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
+	$_s = $_s . $_script;
+
+	my $ret;
+	if ($Tenjin::USE_STRICT) {
+		$ret = eval($_s);
+	} else {
+		no strict;
+		$ret = eval($_s);
+		use strict;
+	}
+	
+	return $ret;
 }
 
 sub to_func {
-	my ($this, $_script) = @_;
+	my ($self, $_script, $_filename) = @_;
 
-	my $_s = "sub { my (\$_context) = \@_; $_script }";
-	my $_func;
+	$_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+	my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
+	$_s = "${_s}sub { my (\$_context) = \@_; $_script }";
+	
+	my $ret;
 	if ($Tenjin::USE_STRICT) {
-		$_func = eval($_s);
+		$ret = eval($_s);
 	} else {
 		no strict;
-		$_func = eval($_s);
+		$ret = eval($_s);
 		use strict;
 	}
-
-	if ($@) {
-		die "Tenjin::Context: Failed rendering, ", $@;
-	}
-
-	return $_func;
+	
+	return $ret;
 }
 
-## ex. {'x'=>10, 'y'=>20} ==> "my $x = $_context->{'x'}; my $y = $_context->{'y'}; "
 sub _build_decl {
-	my $this = shift;
+	my $self = shift;
 
-	my @buf = ();
-	foreach (keys %$this) {
-		push(@buf, "my \$$_ = \$_context->{'$_'}; ") unless $_ eq '_context';
+	my $s = '';
+	foreach my $k (keys %$self) {
+		next if $k eq '_context';
+		$s .= "my \$$k = \$_context->{'$k'}; ";
 	}
-
-	return join('', @buf);
+	return $s;
 }
 
 sub escape {
-	return shift;
+	shift;
 }
 
-*_p			= *Tenjin::Util::_p;
-*_P			= *Tenjin::Util::_P;
-*escape     = *Tenjin::HTML::escape_xml;
-*escape_xml = *Tenjin::HTML::escape_xml;
-*encode_url = *Tenjin::HTML::encode_url;
-*checked    = *Tenjin::HTML::checked;
-*selected   = *Tenjin::HTML::selected;
-*disabled   = *Tenjin::HTML::disabled;
-*nl2br      = *Tenjin::HTML::nl2br;
-*text2html  = *Tenjin::HTML::text2html;
-*tagattr    = *Tenjin::HTML::tagattr;
+*_p           = *Tenjin::Util::_p;
+*_P           = *Tenjin::Util::_P;
+*escape       = *Tenjin::Util::escape_xml;
+*escape_xml   = *Tenjin::Util::escape_xml;
+*unescape_xml = *Tenjin::Util::unescape_xml;
+*encode_url   = *Tenjin::Util::encode_url;
+*decode_url   = *Tenjin::Util::decode_url;
+*checked      = *Tenjin::Util::checked;
+*selected     = *Tenjin::Util::selected;
+*disabled     = *Tenjin::Util::disabled;
+*nl2br        = *Tenjin::Util::nl2br;
+*text2html    = *Tenjin::Util::text2html;
+*tagattr      = *Tenjin::Util::tagattr;
+*tagattrs     = *Tenjin::Util::tagattrs;
+*new_cycle    = *Tenjin::Util::new_cycle;
 
 __PACKAGE__;
 

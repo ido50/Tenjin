@@ -1,91 +1,95 @@
 package Tenjin::Template;
 
 use strict;
+use warnings;
 
 our $MACRO_HANDLER_TABLE = {
-	'include' => sub { my ($arg) = @_;
-		"push(\@_buf, \$_context->{_engine}->render($arg, \$_context, 0));";
+	'include' => sub { my $arg = shift;
+		" \$_buf .= \$_context->{_engine}->render($arg, \$_context, 0);";
 	},
-	'start_capture' => sub { my ($arg) = @_;
-		"my \@_buf_bkup=\@_buf; \@_buf=(); my \$_capture_varname=$arg;";
+	'start_capture' => sub { my $arg = shift;
+		" my \$_buf_bkup=\$_buf; \$_buf=''; my \$_capture_varname=$arg;";
 	},
-	'stop_capture' => sub { my ($arg) = @_;
-		"\$_context->{\$_capture_varname}=join('',\@_buf); \@_buf=\@_buf_bkup;";
+	'stop_capture' => sub { my $arg = shift;
+		" \$_context->{\$_capture_varname}=\$_buf; \$_buf=\$_buf_bkup;";
 	},
-	'start_placeholder' => sub { my ($arg) = @_;
-		"if (\$_context->{$arg}) { push(\@_buf,\$_context->{$arg}); } else {";
+	'start_placeholder' => sub { my $arg = shift;
+		" if (\$_context->{$arg}) { \$_buf .= \$_context->{$arg}; } else {";
 	},
-	'stop_placeholder' => sub { my ($arg) = @_;
-		"}";
+	'stop_placeholder' => sub { my $arg = shift;
+		" }";
 	},
-	'echo' => sub { my ($arg) = @_;
-		"push(\@_buf, $arg);";
+	'echo' => sub { my $arg = shift;
+		" \$_buf .= $arg;";
 	},
 };
 
 sub new {
 	my ($class, $filename, $opts) = @_;
 
-	my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : 'escape';
+	my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
+	my $rawclass   = defined($opts) && exists($opts->{rawclass}) ? $opts->{rawclass} : undef;
 
-	my $this = bless({ 'filename' => $filename, 'script' => undef, 'escapefunc' => $escapefunc, 'timestamp' => undef, 'args' => undef }, $class);
-	$this->convert_file($filename) if $filename;
+	my $self = bless {
+		'filename'   => $filename,
+		'script'     => undef,
+		'escapefunc' => $escapefunc,
+		'rawclass'   => $rawclass,
+		'timestamp'  => undef,
+		'args'       => undef,
+	}, $class;
+	
+	$self->convert_file($filename) if $filename;
 
-	return $this;
+	return $self;
 }
 
 sub _render {
-	my ($this, $context) = (@_);
+	my ($self, $context) = (@_);
 
 	$context = {} unless $context;
 
-	if ($this->{func}) {
-		return $this->{func}->($context);
+	if ($self->{func}) {
+		return $self->{func}->($context);
 	} else {
 		if (ref($context) eq 'HASH') {
-			$context = Tenjin::Context->new($context);
+			$context = $Tenjin::CONTEXT_CLASS->new($context);
 		}
-		my $script;
-		$script = $context->_build_decl() . $this->{script} unless ($this->{args});
-		return $context->evaluate($script);
+		my $script = $self->{script};
+		$script = $context->_build_decl() . $script unless $self->{args};
+		return $context->evaluate($script, $self->{filename});
 	}
 }
 
 sub render {
-	my ($this, $context) = @_;
+	my $self = shift;
 
-	my $output = $this->_render($context);
+	my $output = $self->_render(@_);
 	if ($@) {  # error happened
-		my $template_filename = $this->{filename};
-		die "Tenjin::Template: Error rendering " . $this->{filename} . "\n", $@;
+		my $template_filename = $self->{filename};
+		die "Tenjin::Template: \"Error rendering " . $self->{filename} . "\"\n", $@;
 	}
 	return $output;
 }
 
 sub convert_file {
-	my ($this, $filename) = @_;
+	my ($self, $filename) = @_;
 
-	my $input = Tenjin::Util::read_file($filename, 1);
-	my $script = $this->convert($input);
-	$this->{filename} = $filename;
-
-	return $script;
+	return $self->convert($self->{utils}->read_file($filename, 1));
 }
 
 sub convert {
-	my ($this, $input, $filename) = @_;
+	my ($self, $input, $filename) = @_;
 
-	$this->{filename} = $filename;
-	my @buf = ('my @_buf = (); ', );
-	$this->parse_stmt(\@buf, $input);
-	push(@buf, "join('', \@_buf);\n");
-	$this->{script} = join('', @buf);
+	$self->{filename} = $filename;
+	my @buf = ('my $_buf = ""; my $_V; ', );
+	$self->parse_stmt(\@buf, $input);
 
-	return $this->{script};
+	return $self->{script} = $buf[0] . " \$_buf;\n";
 }
 
 sub compile_stmt_pattern {
-	my ($pi) = @_;
+	my $pi = shift;
 
 	my $pat = '((^[ \t]*)?<\?'.$pi.'( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?)';
 	return qr/$pat/sm;
@@ -96,38 +100,36 @@ sub stmt_pattern {
 }
 
 sub parse_stmt {
-	my ($this, $bufref, $input) = @_;
+	my ($self, $bufref, $input) = @_;
 
 	my $pos = 0;
-	my $pat = $this->stmt_pattern();
+	my $pat = $self->stmt_pattern();
 	while ($input =~ /$pat/g) {
 		my ($pi, $lspace, $mspace, $stmt, $rspace) = ($1, $2, $3, $4, $5);
 		my $start = $-[0];
 		my $text = substr($input, $pos, $start - $pos);
 		$pos = $start + length($pi);
-		if ($text) {
-			$this->parse_expr($bufref, $text);
-		}
+		$self->parse_expr($bufref, $text) if $text;
 		$mspace = '' if $mspace eq ' ';
-		$stmt = $this->hook_stmt($stmt);
-		$this->add_stmt($bufref, $lspace . $mspace . $stmt . $rspace);
+		$stmt = $self->hook_stmt($stmt);
+		$self->add_stmt($bufref, $lspace . $mspace . $stmt . $rspace);
 	}
 	my $rest = $pos == 0 ? $input : substr($input, $pos);
-	$this->parse_expr($bufref, $rest) if $rest;
+	$self->parse_expr($bufref, $rest) if $rest;
 }
 
 sub hook_stmt {
-	my ($this, $stmt) = @_;
+	my ($self, $stmt) = @_;
 
 	## macro expantion
 	if ($stmt =~ /\A(\s*)(\w+)\((.*?)\);?(\s*)\Z/) {
 		my ($lspace, $funcname, $arg, $rspace) = ($1, $2, $3, $4);
-		my $s = $this->expand_macro($funcname, $arg);
+		my $s = $self->expand_macro($funcname, $arg);
 		return $lspace . $s . $rspace if defined($s);
 	}
 
 	## template arguments
-	unless ($this->{args}) {
+	unless ($self->{args}) {
 		if ($stmt =~ m/\A(\s*)\#\@ARGS\s+(.*)(\s*)\Z/) {
 			my ($lspace, $argstr, $rspace) = ($1, $2, $3);
 			my @args = ();
@@ -135,11 +137,13 @@ sub hook_stmt {
 			foreach my $arg (split(/,/, $argstr)) {
 				$arg =~ s/(^\s+|\s+$)//g;
 				next unless $arg;
-				$arg =~ m/\A[a-zA-Z_]\w*\Z/ or die("Tenjin::Template: invalid template argument '$arg'.");
-				push(@args, $arg);
-				push(@declares, "my \$$arg = \$_context->{$arg}; ");
+				$arg =~ m/\A([\$\@\%])?([a-zA-Z_]\w*)\Z/ or die("Tenjin::Template: \"$arg: invalid template argument.\"");
+				die "Tenjin::Template: \"$arg: only '\$var' is available for template argument.\"" unless (!$1 || $1 eq '$');
+				my $name = $2;
+				push(@args, $name);
+				push(@declares, "my \$$name = \$_context->{$name}; ");
 			}
-			$this->{args} = \@args;
+			$self->{args} = \@args;
 			return $lspace . join('', @declares) . $rspace;
 		}
 	}
@@ -148,7 +152,7 @@ sub hook_stmt {
 }
 
 sub expand_macro {
-	my ($this, $funcname, $arg) = @_;
+	my ($self, $funcname, $arg) = @_;
 
 	my $handler = $MACRO_HANDLER_TABLE->{$funcname};
 	return $handler ? $handler->($arg) : undef;
@@ -160,110 +164,113 @@ sub expr_pattern {
 
 ## ex. get_expr_and_escapeflag('=', '$item->{name}', '')  => 1, '$item->{name}', 0
 sub get_expr_and_escapeflag {
-	my ($this, $not_escape, $expr, $delete_newline) = @_;
+	my ($self, $not_escape, $expr, $delete_newline) = @_;
 
 	return $expr, $not_escape eq '', $delete_newline eq '=';
 }
 
 sub parse_expr {
-	my ($this, $bufref, $input) = @_;
+	my ($self, $bufref, $input) = @_;
 
 	my $pos = 0;
-	$this->start_text_part($bufref);
-	my $pat = $this->expr_pattern();
+	$self->start_text_part($bufref);
+	my $pat = $self->expr_pattern();
 	while ($input =~ /$pat/g) {
 		my $start = $-[0];
 		my $text = substr($input, $pos, $start - $pos);
-		my ($expr, $flag_escape, $delete_newline) = $this->get_expr_and_escapeflag($1, $2, $3);
+		my ($expr, $flag_escape, $delete_newline) = $self->get_expr_and_escapeflag($1, $2, $3);
 		$pos = $start + length($&);
-		$this->add_text($bufref, $text) if ($text);
-		$this->add_expr($bufref, $expr, $flag_escape) if $expr;
+		$self->add_text($bufref, $text) if $text;
+		$self->add_expr($bufref, $expr, $flag_escape) if $expr;
 		if ($delete_newline) {
 			my $end = $+[0];
-			if (substr($input, $end+1, 1) == "\n") {
-				push(@$bufref, "\n");
-				$pos += 1;
+			if (substr($input, $end + 1, 1) eq "\n") {
+				$bufref->[0] .= "\n";
+				$pos++;
 			}
 		}
 	}
 	my $rest = $pos == 0 ? $input : substr($input, $pos);
-	$this->add_text($bufref, $rest);
-	$this->stop_text_part($bufref);
+	$self->add_text($bufref, $rest);
+	$self->stop_text_part($bufref);
 }
 
 sub start_text_part {
-	my ($this, $bufref) = @_;
+	my ($self, $bufref) = @_;
 
-	push(@$bufref, "push(\@_buf, ");
+	$bufref->[0] .= ' $_buf .= ';
 }
-
 
 sub stop_text_part {
-	my ($this, $bufref) = @_;
+	my ($self, $bufref) = @_;
 
-	push(@$bufref, "); ");
+	$bufref->[0] .= '; ';
 }
-
 
 sub add_text {
-	my ($this, $bufref, $text) = @_;
+	my ($self, $bufref, $text) = @_;
 
-	return unless $text;
+	return undef unless $text;
 	$text =~ s/[`\\]/\\$&/g;
-	push(@$bufref, "q`$text`, ");
+	my $is_start = $bufref->[0] =~ / \$_buf \.= \Z/;
+	$bufref->[0] .= $is_start ? "q`$text`" : " . q`$text`";
 }
 
-
 sub add_stmt {
-	my ($this, $bufref, $stmt) = @_;
+	my ($self, $bufref, $stmt) = @_;
 
-	push(@$bufref, $stmt);
+	$bufref->[0] .= $stmt;
 }
 
 sub add_expr {
-	my ($this, $bufref, $expr, $flag_escape) = @_;
+	my ($self, $bufref, $expr, $flag_escape) = @_;
 
-	if ($flag_escape) {
-		my $funcname = $this->{escapefunc};
-		push(@$bufref, "$funcname($expr), ");
-	} else {
-		push(@$bufref, "$expr, ");
-	}
+	my $dot = $bufref->[0] =~ / \$_buf \.= \Z/ ? '' : ' . ';
+	$bufref->[0] .= $dot . ($flag_escape ? $self->escaped_expr($expr) : "($expr)");
 }
-
 
 sub defun {   ## (experimental)
-	my ($this, $funcname, @args) = @_;
+	my ($self, $funcname, @args) = @_;
 
 	unless ($funcname) {
-		$_ = $this->{filename};
-		s/\.\w+$//  if ($_);
-		s/[^\w]/_/g if ($_);
-		$funcname = "render_" . $_;
+		my $funcname = $self->{filename};
+		if ($funcname) {
+			$funcname =~ s/\.\w+$//;
+			$funcname =~ s/[^\w]/_/g;
+		}
+		$funcname = 'render_' . $funcname;
 	}
 
-	my @buf = ();
-	push(@buf, "sub $funcname {");
-	push(@buf, " my (\$_context) = \@_; ");
+	my $str = "sub $funcname { my (\$_context) = \@_; ";
 	foreach (@args) {
-		push(@buf, "my \$$_ = \$_context->{'$_'}; ");
+		$str .= "my \$$_ = \$_context->{'$_'}; ";
 	}
-	push(@buf, $this->{script});
-	push(@buf, "}\n");
+	$str .= $self->{script};
+	$str .= "}\n";
 
-	return join('', @buf);
+	return $str;
 }
 
-## compile $this->{script} into closure.
+## compile $self->{script} into closure.
 sub compile {
-	my $this = shift;
+	my $self = shift;
 
-	if ($this->{args}) {
-		my $func = Tenjin::Context->to_func($this->{script});
-		die("Tenjin::Template: Error compiling " . $this->{filename} . "\n", $@) if $@;
-		return $this->{func} = $func;
+	if ($self->{args}) {
+		my $func = $Tenjin::CONTEXT_CLASS->to_func($self->{script}, $self->{filename});
+		die "Tenjin::Template: \"Error compiling " . $self->{filename} . "\"\n", $@ if $@;
+		return $self->{func} = $func;
 	}
-	return;
+	return undef;
+}
+
+sub escaped_expr {
+	my ($self, $expr) = @_;
+
+	return "$self->{escapefunc}($expr)" if $self->{escapefunc};
+
+	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))" if $self->{rawclass};
+
+	return "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
 }
 
 __PACKAGE__;

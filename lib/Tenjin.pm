@@ -1,17 +1,209 @@
 package Tenjin;
 
 use Tenjin::Context;
-use Tenjin::Engine;
-use Tenjin::HTML;
 use Tenjin::Template;
 use Tenjin::Preprocessor;
 use Tenjin::Util;
 
 use strict;
+use warnings;
 
-our $VERSION = 0.04;
+our $VERSION = 0.05;
 our $USE_STRICT = 0;
-our $ENCODING = "utf8";
+our $ENCODING = 'utf8';
+our $BYPASS_TAINT   = 1; # unset if you like taint mode
+our $TEMPLATE_CLASS = 'Tenjin::Template';
+our $CONTEXT_CLASS  = 'Tenjin::Context';
+our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
+our $TIMESTAMP_INTERVAL = 5;
+
+sub new {
+	my ($class, $options) = @_;
+
+	my $self = {};
+	foreach (qw[prefix postfix layout path cache preprocess templateclass strict encoding]) {
+		$self->{$_} = delete $options->{$_};
+	}
+	$self->{cache} = 1 unless defined $self->{cache};
+	$self->{init_opts_for_template} = $options;
+	$self->{templates} = {};
+	$self->{prefix} = '' unless $self->{prefix};
+	$self->{postfix} = '' unless $self->{postfix};
+
+	if ($self->{encoding}) {
+		$Tenjin::ENCODING = $self->{encoding};
+	}
+	if (defined $self->{strict}) {
+		$Tenjin::USE_STRICT = $self->{strict};
+	}
+
+	$self->{utils} = Tenjin::Util->new();
+
+	return bless $self, $class;
+}
+
+sub to_filename {
+	my ($self, $template_name) = @_;
+
+	if (substr($template_name, 0, 1) eq ':') {
+		return $self->{prefix} . substr($template_name, 1) . $self->{postfix};
+	}
+
+	return $template_name;
+}
+
+sub find_template_file {
+	my ($self, $filename) = @_;
+
+	my $path = $self->{path};
+	if ($path) {
+		my $sep = $^O eq 'MSWin32' ? '\\\\' : '/';
+		foreach my $dirname (@$path) {
+			my $filepath = $dirname . $sep . $filename;
+			return $filepath if -f $filepath;
+		}
+	} else {
+		return $filename if -f $filename;
+	}
+	my $s = $path ? ("['" . join("','", @$path) . "']") : '[]';
+	die "Tenjin::Engine: \"$filename not found (path=$s)\".";
+}
+
+sub register_template {
+	my ($self, $template_name, $template) = @_;
+
+	$self->{templates}->{$template_name} = $template;
+}
+
+sub get_template {
+	my ($self, $template_name, $_context) = @_;
+
+	## get cached template
+	my $template = $self->{templates}->{$template_name};
+
+	my $now = time();
+
+	## check whether template file is updated or not
+	if ($template && $template->{timestamp} && $template->{filename}) {
+		if ($template->{_last_checked_at} + $TIMESTAMP_INTERVAL <= $now) {
+			$template->{_last_checked_at} = $now;
+			$template = undef if $template->{timestamp} < (stat $template->{filename})[9];
+		}
+	}
+
+	## load and register template
+	unless ($template) {
+		my $filename = $self->to_filename($template_name);
+		my $filepath = $self->find_template_file($filename);
+		$template = $self->create_template($filepath, $_context);  # $_context is passed only for preprocessor
+		$template->{_last_checked_at} = $now;
+		$self->register_template($template_name, $template);
+	}
+
+	return $template;
+}
+
+sub read_template_file {
+	my ($self, $template, $filename, $_context) = @_;
+
+	if ($self->{preprocess}) {
+		if (! defined($_context) || ! $_context->{_engine}) {
+			$_context = {};
+			$self->hook_context($_context);
+		}
+		my $pp = $Tenjin::PREPROCESSOR_CLASS->new();
+		$pp->convert($self->_read_file($filename));
+		return $pp->render($_context);
+	}
+
+	return $self->{utils}->read_file($filename, 1);
+}
+
+sub store_cachefile {
+	my ($self, $cachename, $template) = @_;
+
+	my $cache = $template->{script};
+	if (defined $template->{args}) {
+		my $args = $template->{args};
+		$cache = "\#\@ARGS " . join(',', @$args) . "\n" . $cache;
+	}
+	$self->{utils}->write_file($cachename, $cache, 1);
+}
+
+sub load_cachefile {
+	my ($self, $cachename, $template) = @_;
+
+	my $cache = $self->{utils}->read_file($cachename, 1);
+	if ($cache =~ s/\A\#\@ARGS (.*)\r?\n//) {
+		my $argstr = $1;
+		$argstr =~ s/\A\s+|\s+\Z//g;
+		my @args = split(',', $argstr);
+		$template->{args} = \@args;
+	}
+	$template->{script} = $cache;
+}
+
+sub cachename {
+	my ($self, $filename) = @_;
+
+	return $filename . '.cache';
+}
+
+sub create_template {
+	my ($self, $filename, $_context) = @_;
+
+	my $cachename = $self->cachename($filename);
+
+	my $class = $self->{templateclass} || $Tenjin::TEMPLATE_CLASS;
+	my $template = $class->new(undef, $self->{init_opts_for_template});
+	$template->{timestamp} = time();
+
+	if (! $self->{cache}) {
+		$template->convert($self->read_template_file($template, $filename, $_context), $filename);
+	} elsif (! -f $cachename || (stat $cachename)[9] < (stat $filename)[9]) {
+		$template->convert($self->read_template_file($template, $filename, $_context), $filename);
+		$self->store_cachefile($cachename, $template);
+	} else {
+		$template->{filename} = $filename;
+		$self->load_cachefile($cachename, $template);
+	}
+	$template->compile();
+
+	return $template;
+}
+
+sub render {
+	my ($self, $template_name, $context, $layout) = @_;
+
+	$context = {} unless defined $context;
+	$layout = 1 unless defined $layout;
+
+	$self->hook_context($context);
+
+	my $output;
+	while (1) {
+		my $template = $self->get_template($template_name, $context); # pass $context only for preprocessing
+		$output = $template->_render($context);
+		die("*** ERROR: $template->{filename}\n", $@) if $@;
+		
+		$layout = $context->{_layout} if exists $context->{_layout};
+		$layout = $self->{layout} if $layout == 1;
+		
+		last unless $layout;
+		
+		$template_name = $layout;
+		$layout = undef;
+		$context->{_content} = $output;
+		
+		delete $context->{_layout};
+	}
+	return $output;
+}
+
+sub hook_context {
+	my ($self, $context) = @_;
+	$context->{_engine} = $self;
+}
 
 __PACKAGE__;
 
@@ -53,7 +245,54 @@ C<pltenjin example.html> will render the template stored in the example.html fil
 a template to Perl code by using C<pltenjin -s example.html>. This is the code used internally
 by Tenjin when rendering templates. There are more options, checkout SEE ALSO for links to the usage guides.
 
-For detailed usage instructions see L<Tenjin::Engine>.
+=head1 METHODS
+
+=head2 new \%options
+
+This creates a new instant of Tenjin. C<\%options> is a hash-ref
+containing Tenjin's configuration options:
+
+=over
+
+=item * B<path> - Array-ref of filesystem paths where templates will be searched
+
+=item * B<prefix> - A string that will be automatically prepended to template names
+		 when searching for them in the path. Empty by default.
+
+=item * B<postfix> - The default extension to be automtically appended to template names
+		  when searching for them in the path. Don't forget to include the
+		  dot, such as '.html'. Empty by default.
+
+=item * B<cache> - If set to 1 (the default), compiled templates will be cached on the
+		filesystem.
+
+=item * B<preprocess> - Enable template preprocessing (turned off by default). Only
+		     use if you're actually using any preprocessed Perl code in
+		     your templates.
+
+=item * B<layout> - Name of a layout template that can be optionally used. If set,
+		 templates will be automatically inserted into the layout template,
+		 in the location where you use C<[== $_content ==]>.
+
+=item * B<strict> - Another way to make Tenjin use strict on embedded Perl code (turned
+		 off by default).
+
+=item * B<encoding> - Another way to set the encoding of your template files (set to utf8
+		   by default).
+
+=back
+
+=head2 render $tmpl_name, [\%context, $layout]
+
+Renders a template whose name is identified by C<$tmpl_name>. Remember that a prefix
+and a postfix might be added if they where set when creating the Tenjin instance.
+
+C<$context> is a hash-ref containing the variables that will be available for usage inside
+the templates. So, for example, if your C<\%context> is { message => 'Hi there }, then
+you can use C<$message> inside your templates.
+
+C<$layout> is a flag denoting whether or not to render this template into the layout template
+there was set when creating the Tenjin instance.
 
 =head1 SEE ALSO
 
@@ -66,7 +305,7 @@ Note that the Perl version of Tenjin is refered to as plTenjin on the Tenjin web
 and that, as oppose to this module, the website suggests using a .plhtml extension
 for the templates instead of .html (this is entirely your choice).
 
-L<Tenjin::Engine>, L<Tenjin::Template>, L<Catalyst::View::Tenjin>.
+L<Tenjin::Template>, L<Catalyst::View::Tenjin>.
 
 =head1 TODO
 
@@ -86,7 +325,7 @@ L<Tenjin::Engine>, L<Tenjin::Template>, L<Catalyst::View::Tenjin>.
 
 =head1 AUTHOR
 
-Tenjin is developed by Makoto Kuwata at L<http://www.kuwata-lab.com/tenjin/>. Version 0.03 was tidied and CPANized from the original 0.0.2 source by Ido Perelmutter E<lt>ido50@yahoo.comE<gt>.
+Tenjin is developed by Makoto Kuwata at L<http://www.kuwata-lab.com/tenjin/>. Version 0.03 was tidied and CPANized from the original 0.0.2 source (with later updates from Makoto Kuwata's tenjin github repository) by Ido Perlmuter E<lt>ido@ido50.netE<gt>.
 
 =head1 COPYRIGHT & LICENSE
 

@@ -13,8 +13,6 @@ inc/Module/Install/WriteAll.pm
 script/pltenjin
 lib/Tenjin.pm
 lib/Tenjin/Context.pm
-lib/Tenjin/Engine.pm
-lib/Tenjin/HTML.pm
 lib/Tenjin/Preprocessor.pm
 lib/Tenjin/Template.pm
 lib/Tenjin/Util.pm
