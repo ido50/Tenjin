@@ -70,10 +70,10 @@ sub _decode_params {
 
 	return '' unless $s;
 
-	$s =~ s/%3C%60%23(.*?)%23%60%3E/'[=='.Tenjin::Util::decode_url($1).'=]'/ge;
-	$s =~ s/%3C%60%24(.*?)%24%60%3E/'[='.Tenjin::Util::decode_url($1).'=]'/ge;
-	$s =~ s/&lt;`\#(.*?)\#`&gt;/'[=='.Tenjin::Util::unescape_xml($1).'=]'/ge;
-	$s =~ s/&lt;`\$(.*?)\$`&gt;/'[='.Tenjin::Util::unescape_xml($1).'=]'/ge;
+	$s =~ s/%3C%60%23(.*?)%23%60%3E/'[=='.$self->decode_url($1).'=]'/ge;
+	$s =~ s/%3C%60%24(.*?)%24%60%3E/'[='.$self->decode_url($1).'=]'/ge;
+	$s =~ s/&lt;`\#(.*?)\#`&gt;/'[=='.$self->unescape_xml($1).'=]'/ge;
+	$s =~ s/&lt;`\$(.*?)\$`&gt;/'[='.$self->unescape_xml($1).'=]'/ge;
 	$s =~ s/<`\#(.*?)\#`>/[==$1=]/g;
 	$s =~ s/<`\$(.*?)\$`>/[=$1=]/g;
 
