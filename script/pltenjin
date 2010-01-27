@@ -1,16 +1,7 @@
-#!/usr/bin/env perl
-
-###
-### pltenjin - very fast and full-featured template engine for Perl
-###
-### $Release: $
-### $Copyright$
-### $License$
-###
-
-
+#!/usr/bin/perl -w
 package Tenjin::NoTextTemplate;
-#use strict;
+
+use strict;
 use Data::Dumper;
 
 @ISA = ('Tenjin::Template');
@@ -71,15 +62,13 @@ sub add_expr {
 
 
 
-package Tenjin::Main;
+package main;
 
 use strict;
+use warnings;
 use Data::Dumper;
 use File::Basename;
-#use PadWalker;   # inspect local variables via stack-frame
 use Tenjin;
-#require File::Temp;
-#require IPC::Open3;
 
 sub execute {
     ## parse @ARGV
@@ -168,7 +157,7 @@ sub execute {
     }
 
     ## create template engine
-    my $engine = Tenjin::Engine->new(\%properties);
+    my $engine = Tenjin->new(\%properties);
 
     ## read stdin when no flenames
     my $input;
