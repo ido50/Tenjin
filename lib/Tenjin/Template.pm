@@ -2,6 +2,7 @@ package Tenjin::Template;
 
 use strict;
 use warnings;
+use Tenjin::Util;
 
 our $MACRO_HANDLER_TABLE = {
 	'include' => sub { my $arg = shift;
@@ -38,6 +39,8 @@ sub new {
 		'timestamp'  => undef,
 		'args'       => undef,
 	}, $class;
+
+	$self->{utils} = Tenjin::Util->new();
 	
 	$self->convert_file($filename) if $filename;
 
@@ -75,7 +78,7 @@ sub render {
 sub convert_file {
 	my ($self, $filename) = @_;
 
-	return $self->convert($self->{utils}->read_file($filename, 1));
+	return $self->convert($self->{utils}->read_file($filename, 1), $filename);
 }
 
 sub convert {
@@ -265,6 +268,8 @@ sub compile {
 
 sub escaped_expr {
 	my ($self, $expr) = @_;
+
+	return $expr;
 
 	return "$self->{escapefunc}($expr)" if $self->{escapefunc};
 

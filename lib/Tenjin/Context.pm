@@ -6,24 +6,23 @@ use warnings;
 sub new {
 	my ($class, $self) = @_;
 
-	$self = {} unless defined $self;
+	$self ||= {};
 	return bless $self, $class;
 }
 
 sub evaluate {
-	my ($self, $_script, $_filename) = @_;
+	my ($self, $script, $filename) = @_;
 
-	my $_context = $self;
-	$_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
-	my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
-	$_s = $_s . $_script;
+	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
+	$s .= $script;
 
 	my $ret;
 	if ($Tenjin::USE_STRICT) {
-		$ret = eval($_s);
+		$ret = eval($s);
 	} else {
 		no strict;
-		$ret = eval($_s);
+		$ret = eval($s);
 		use strict;
 	}
 	

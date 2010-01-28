@@ -15,7 +15,7 @@ our $BYPASS_TAINT   = 1; # unset if you like taint mode
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
-our $TIMESTAMP_INTERVAL = 5;
+our $TIMESTAMP_INTERVAL = 3600;
 
 sub new {
 	my ($class, $options) = @_;
@@ -72,6 +72,7 @@ sub find_template_file {
 sub register_template {
 	my ($self, $template_name, $template) = @_;
 
+	$template->{timestamp} = time;
 	$self->{templates}->{$template_name} = $template;
 }
 
@@ -81,22 +82,14 @@ sub get_template {
 	## get cached template
 	my $template = $self->{templates}->{$template_name};
 
-	my $now = time();
-
 	## check whether template file is updated or not
-	if ($template && $template->{timestamp} && $template->{filename}) {
-		if ($template->{_last_checked_at} + $TIMESTAMP_INTERVAL <= $now) {
-			$template->{_last_checked_at} = $now;
-			$template = undef if $template->{timestamp} < (stat $template->{filename})[9];
-		}
-	}
+	undef $template if ($template && $template->{timestamp} + $TIMESTAMP_INTERVAL <= time);
 
 	## load and register template
 	unless ($template) {
 		my $filename = $self->to_filename($template_name);
 		my $filepath = $self->find_template_file($filename);
 		$template = $self->create_template($filepath, $_context);  # $_context is passed only for preprocessor
-		$template->{_last_checked_at} = $now;
 		$self->register_template($template_name, $template);
 	}
 
@@ -156,7 +149,6 @@ sub create_template {
 
 	my $class = $self->{templateclass} || $Tenjin::TEMPLATE_CLASS;
 	my $template = $class->new(undef, $self->{init_opts_for_template});
-	$template->{timestamp} = time();
 
 	if (! $self->{cache}) {
 		$template->convert($self->read_template_file($template, $filename, $_context), $filename);
@@ -175,8 +167,8 @@ sub create_template {
 sub render {
 	my ($self, $template_name, $context, $layout) = @_;
 
-	$context = {} unless defined $context;
-	$layout = 1 unless defined $layout;
+	$context ||= {};
+	$layout ||= 1;
 
 	$self->hook_context($context);
 
