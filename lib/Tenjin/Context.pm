@@ -17,8 +17,6 @@ sub evaluate {
 	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
 	$s .= $script;
 
-	print STDERR "============================\n=========================\n$s\n================================\n====================\n";
-
 	my $ret;
 	if ($Tenjin::USE_STRICT) {
 		$ret = eval($s);
@@ -37,8 +35,6 @@ sub to_func {
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
 	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
 	$s .= "sub { my (\$context) = \@_; $script }";
-
-	print STDERR "============================\n=========================\n$s\n================================\n====================\n";
 	
 	my $ret;
 	if ($Tenjin::USE_STRICT) {
