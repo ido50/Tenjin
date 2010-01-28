@@ -50,7 +50,7 @@ sub new {
 sub _render {
 	my ($self, $context) = (@_);
 
-	$context = {} unless $context;
+	$context ||= {};
 
 	if ($self->{func}) {
 		return $self->{func}->($context);

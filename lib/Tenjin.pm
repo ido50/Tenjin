@@ -165,36 +165,16 @@ sub create_template {
 }
 
 sub render {
-	my ($self, $template_name, $context, $layout) = @_;
+	my ($self, $template_name, $context) = @_;
 
 	$context ||= {};
-	$layout ||= 1;
-
-	$self->hook_context($context);
-
-	my $output;
-	while (1) {
-		my $template = $self->get_template($template_name, $context); # pass $context only for preprocessing
-		$output = $template->_render($context);
-		die("*** ERROR: $template->{filename}\n", $@) if $@;
-		
-		$layout = $context->{_layout} if exists $context->{_layout};
-		$layout = $self->{layout} if $layout == 1;
-		
-		last unless $layout;
-		
-		$template_name = $layout;
-		$layout = undef;
-		$context->{_content} = $output;
-		
-		delete $context->{_layout};
-	}
-	return $output;
-}
-
-sub hook_context {
-	my ($self, $context) = @_;
 	$context->{_engine} = $self;
+
+	my $template = $self->get_template($template_name, $context); # pass $context only for preprocessing
+	my $output = $template->_render($context);
+	die("*** ERROR: $template->{filename}\n", $@) if $@;
+
+	return $output;
 }
 
 __PACKAGE__;
