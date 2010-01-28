@@ -72,8 +72,6 @@ sub find_template_file {
 sub register_template {
 	my ($self, $template_name, $template) = @_;
 
-	undef $self->{templates}->{$template_name};
-
 	$template->{timestamp} = time;
 	$self->{templates}->{$template_name} = $template;
 }
