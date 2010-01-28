@@ -30,18 +30,18 @@ sub evaluate {
 }
 
 sub to_func {
-	my ($self, $_script, $_filename) = @_;
+	my ($self, $script, $filename) = @_;
 
-	$_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
-	my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
-	$_s = "${_s}sub { my (\$_context) = \@_; $_script }";
+	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+	my $s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
+	$s = "${s}sub { my (\$context) = \@_; $script }";
 	
 	my $ret;
 	if ($Tenjin::USE_STRICT) {
-		$ret = eval($_s);
+		$ret = eval($s);
 	} else {
 		no strict;
-		$ret = eval($_s);
+		$ret = eval($s);
 		use strict;
 	}
 	
@@ -54,30 +54,10 @@ sub _build_decl {
 	my $s = '';
 	foreach my $k (keys %$self) {
 		next if $k eq '_context';
-		$s .= "my \$$k = \$_context->{'$k'}; ";
+		$s .= "my \$$k = \$context->{'$k'}; ";
 	}
 	return $s;
 }
-
-sub escape {
-	shift;
-}
-
-*_p           = *Tenjin::Util::_p;
-*_P           = *Tenjin::Util::_P;
-*escape       = *Tenjin::Util::escape_xml;
-*escape_xml   = *Tenjin::Util::escape_xml;
-*unescape_xml = *Tenjin::Util::unescape_xml;
-*encode_url   = *Tenjin::Util::encode_url;
-*decode_url   = *Tenjin::Util::decode_url;
-*checked      = *Tenjin::Util::checked;
-*selected     = *Tenjin::Util::selected;
-*disabled     = *Tenjin::Util::disabled;
-*nl2br        = *Tenjin::Util::nl2br;
-*text2html    = *Tenjin::Util::text2html;
-*tagattr      = *Tenjin::Util::tagattr;
-*tagattrs     = *Tenjin::Util::tagattrs;
-*new_cycle    = *Tenjin::Util::new_cycle;
 
 __PACKAGE__;
 

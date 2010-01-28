@@ -77,7 +77,7 @@ sub register_template {
 }
 
 sub get_template {
-	my ($self, $template_name, $_context) = @_;
+	my ($self, $template_name, $context) = @_;
 
 	## get cached template
 	my $template = $self->{templates}->{$template_name};
@@ -89,7 +89,7 @@ sub get_template {
 	unless ($template) {
 		my $filename = $self->to_filename($template_name);
 		my $filepath = $self->find_template_file($filename);
-		$template = $self->create_template($filepath, $_context);  # $_context is passed only for preprocessor
+		$template = $self->create_template($filepath, $context);  # $_context is passed only for preprocessor
 		$self->register_template($template_name, $template);
 	}
 
@@ -97,16 +97,16 @@ sub get_template {
 }
 
 sub read_template_file {
-	my ($self, $template, $filename, $_context) = @_;
+	my ($self, $template, $filename, $context) = @_;
 
 	if ($self->{preprocess}) {
-		if (! defined($_context) || ! $_context->{_engine}) {
-			$_context = {};
-			$self->hook_context($_context);
+		if (! defined($context) || ! $context->{_engine}) {
+			$context ||= {};
+			$context->{'_engine'} = $self;
 		}
 		my $pp = $Tenjin::PREPROCESSOR_CLASS->new();
 		$pp->convert($self->_read_file($filename));
-		return $pp->render($_context);
+		return $pp->render($context);
 	}
 
 	return $self->{utils}->read_file($filename, 1);
@@ -143,7 +143,7 @@ sub cachename {
 }
 
 sub create_template {
-	my ($self, $filename, $_context) = @_;
+	my ($self, $filename, $context) = @_;
 
 	my $cachename = $self->cachename($filename);
 
@@ -151,9 +151,9 @@ sub create_template {
 	my $template = $class->new(undef, $self->{init_opts_for_template});
 
 	if (! $self->{cache}) {
-		$template->convert($self->read_template_file($template, $filename, $_context), $filename);
+		$template->convert($self->read_template_file($template, $filename, $context), $filename);
 	} elsif (! -f $cachename || (stat $cachename)[9] < (stat $filename)[9]) {
-		$template->convert($self->read_template_file($template, $filename, $_context), $filename);
+		$template->convert($self->read_template_file($template, $filename, $context), $filename);
 		$self->store_cachefile($cachename, $template);
 	} else {
 		$template->{filename} = $filename;
@@ -168,7 +168,7 @@ sub render {
 	my ($self, $template_name, $context) = @_;
 
 	$context ||= {};
-	$context->{_engine} = $self;
+	$context->{'_engine'} = $self;
 
 	my $template = $self->get_template($template_name, $context); # pass $context only for preprocessing
 	my $output = $template->_render($context);

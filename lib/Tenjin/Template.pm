@@ -6,16 +6,16 @@ use Tenjin::Util;
 
 our $MACRO_HANDLER_TABLE = {
 	'include' => sub { my $arg = shift;
-		" \$_buf .= \$_context->{_engine}->render($arg, \$_context, 0);";
+		" \$_buf .= \$context->{_engine}->render($arg, \$context, 0);";
 	},
 	'start_capture' => sub { my $arg = shift;
 		" my \$_buf_bkup=\$_buf; \$_buf=''; my \$_capture_varname=$arg;";
 	},
 	'stop_capture' => sub { my $arg = shift;
-		" \$_context->{\$_capture_varname}=\$_buf; \$_buf=\$_buf_bkup;";
+		" \$context->{\$_capture_varname}=\$_buf; \$_buf=\$_buf_bkup;";
 	},
 	'start_placeholder' => sub { my $arg = shift;
-		" if (\$_context->{$arg}) { \$_buf .= \$_context->{$arg}; } else {";
+		" if (\$context->{$arg}) { \$_buf .= \$context->{$arg}; } else {";
 	},
 	'stop_placeholder' => sub { my $arg = shift;
 		" }";
@@ -144,7 +144,7 @@ sub hook_stmt {
 				die "Tenjin::Template: \"$arg: only '\$var' is available for template argument.\"" unless (!$1 || $1 eq '$');
 				my $name = $2;
 				push(@args, $name);
-				push(@declares, "my \$$name = \$_context->{$name}; ");
+				push(@declares, "my \$$name = \$context->{$name}; ");
 			}
 			$self->{args} = \@args;
 			return $lspace . join('', @declares) . $rspace;
@@ -244,9 +244,9 @@ sub defun {   ## (experimental)
 		$funcname = 'render_' . $funcname;
 	}
 
-	my $str = "sub $funcname { my (\$_context) = \@_; ";
+	my $str = "sub $funcname { my (\$context) = \@_; ";
 	foreach (@args) {
-		$str .= "my \$$_ = \$_context->{'$_'}; ";
+		$str .= "my \$$_ = \$context->{'$_'}; ";
 	}
 	$str .= $self->{script};
 	$str .= "}\n";
