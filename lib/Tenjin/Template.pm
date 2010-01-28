@@ -273,7 +273,7 @@ sub escaped_expr {
 
 	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))" if $self->{rawclass};
 
-	return "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
+	return "\$_engine->{utils}->escape_xml($expr)";
 }
 
 __PACKAGE__;
