@@ -72,6 +72,8 @@ sub find_template_file {
 sub register_template {
 	my ($self, $template_name, $template) = @_;
 
+	undef $self->{templates}->{$template_name};
+
 	$template->{timestamp} = time;
 	$self->{templates}->{$template_name} = $template;
 }
@@ -83,7 +85,7 @@ sub get_template {
 	my $template = $self->{templates}->{$template_name};
 
 	## check whether template file is updated or not
-	undef $template if ($template && $template->{timestamp} + $TIMESTAMP_INTERVAL <= time);
+	undef $template if ($template && $template->{filename} && $template->{timestamp} + $TIMESTAMP_INTERVAL <= time);
 
 	## load and register template
 	unless ($template) {
