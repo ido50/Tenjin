@@ -13,6 +13,7 @@ sub new {
 sub evaluate {
 	my ($self, $script, $filename) = @_;
 
+	my $context = $self;
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
 	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
 	$s .= $script;
