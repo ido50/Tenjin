@@ -269,8 +269,6 @@ sub compile {
 sub escaped_expr {
 	my ($self, $expr) = @_;
 
-	return $expr;
-
 	return "$self->{escapefunc}($expr)" if $self->{escapefunc};
 
 	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))" if $self->{rawclass};
