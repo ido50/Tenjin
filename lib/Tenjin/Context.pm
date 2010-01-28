@@ -33,7 +33,7 @@ sub to_func {
 	my ($self, $script, $filename) = @_;
 
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
-	my $s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
+	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
 	$s = "${s}sub { my (\$context) = \@_; $script }";
 	
 	my $ret;
