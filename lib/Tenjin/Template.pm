@@ -6,7 +6,7 @@ use Tenjin::Util;
 
 our $MACRO_HANDLER_TABLE = {
 	'include' => sub { my $arg = shift;
-		" \$_buf .= \$context->{_engine}->render($arg, \$context, 0);";
+		" \$_buf .= \$context->{'_engine'}->render($arg, \$context, 0);";
 	},
 	'start_capture' => sub { my $arg = shift;
 		" my \$_buf_bkup=\$_buf; \$_buf=''; my \$_capture_varname=$arg;";
@@ -48,7 +48,7 @@ sub new {
 }
 
 sub _render {
-	my ($self, $context) = (@_);
+	my ($self, $context) = @_;
 
 	$context ||= {};
 
