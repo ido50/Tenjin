@@ -271,7 +271,7 @@ sub escaped_expr {
 
 	return "$self->{escapefunc}($expr)" if $self->{escapefunc};
 
-	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))" if $self->{rawclass};
+	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : \$_engine->{utils}->escape_xml($expr)" if $self->{rawclass};
 
 	return "\$_engine->{utils}->escape_xml($expr)";
 }
