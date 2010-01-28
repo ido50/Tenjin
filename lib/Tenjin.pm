@@ -171,7 +171,7 @@ sub render {
 	$context->{'_engine'} = $self;
 	
 	use Data::Dumper;
-	print STDERR "\n==================\n", Dump($context), "\n==================\n";
+	print STDERR "\n==================\n", Dumper($context), "\n==================\n";
 
 	my $template = $self->get_template($template_name, $context); # pass $context only for preprocessing
 	my $output = $template->_render($context);
