@@ -89,7 +89,7 @@ sub get_template {
 	unless ($template) {
 		my $filename = $self->to_filename($template_name);
 		my $filepath = $self->find_template_file($filename);
-		$template = $self->create_template($filepath, $context);  # $_context is passed only for preprocessor
+		$template = $self->create_template($filepath, $context);  # $context is passed only for preprocessor
 		$self->register_template($template_name, $template);
 	}
 

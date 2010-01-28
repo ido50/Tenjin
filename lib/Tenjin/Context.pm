@@ -53,7 +53,7 @@ sub _build_decl {
 
 	my $s = '';
 	foreach my $k (keys %$self) {
-		next if $k eq '_context';
+		next if $k eq '_context' || $k eq 'context';
 		$s .= "my \$$k = \$context->{'$k'}; ";
 	}
 	return $s;
