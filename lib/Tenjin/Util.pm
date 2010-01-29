@@ -81,7 +81,7 @@ sub _decode_params {
 }
 
 sub escape_xml {
-	encode_entities($_[1]);
+	encode_entities($_[1], qq!'<>&"!);
 }
 
 sub unescape_xml {
