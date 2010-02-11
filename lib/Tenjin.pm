@@ -15,7 +15,7 @@ our $BYPASS_TAINT   = 1; # unset if you like taint mode
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
-our $TIMESTAMP_INTERVAL = 3600;
+our $TIMESTAMP_INTERVAL = 10;
 
 sub new {
 	my ($class, $options) = @_;
