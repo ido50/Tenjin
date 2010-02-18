@@ -1,0 +1,43 @@
+foo foo foo foo foo foo foo foo foo foo foo foo
+foo foo foo foo foo foo foo foo foo foo foo foo
+foo foo foo foo foo foo foo foo foo foo foo foo
+foo foo foo foo foo foo foo foo foo foo foo foo
+foo foo foo foo foo foo foo foo foo foo foo foo
+
+[== ${scalar_variable} =]
+[== ${hash_variable}->{hash_value_key} =]
+[== ${array_variable}->[ 2 ] =]
+[== ${this}->{is}->{a}->{very}->{deep}->{hash}->{structure} =]
+<?pl foreach ( @{${array_loop}} ) { ?>[== $_ =]<?pl } ?>
+
+<?pl foreach ( sort( keys( %{${hash_loop}} ) ) ) { ?>[== $_ =]: [== ${hash_loop}->{$_} =]<?pl } ?>
+
+<?pl foreach ( @{${records_loop}} ) { ?>[== $_->{name} =]: [== $_->{age} =]<?pl } ?>
+
+<?pl foreach ( @{${array_loop}} ) { ?>[== $_ =]<?pl } ?>
+
+<?pl foreach ( sort( keys( %{${hash_loop}} ) ) ) { ?>[== $_ =]: [== ${hash_loop}->{$_} =]<?pl } ?>
+
+<?pl foreach ( @{${records_loop}} ) { ?>[== $_->{name} =]: [== $_->{age} =]<?pl } ?>
+
+<?pl if( 1 ) { ?>true<?pl } ?>
+
+<?pl if( ${variable_if} ) { ?>true<?pl } ?>
+
+<?pl if( 1 ) { ?>true<?pl } else { ?>false<?pl } ?>
+
+<?pl if( ${variable_if_else} ) { ?>true<?pl } else { ?>false<?pl } ?>
+
+<?pl if( 1 ) { ?>[== ${template_if_true} =]<?pl } ?>
+
+<?pl if( ${variable_if} ) { ?>[== ${template_if_true} =]<?pl } ?>
+
+<?pl if( 1 ) { ?>[== ${template_if_true} =]<?pl } else { ?>[== ${template_if_false} =]<?pl } ?>
+
+<?pl if( ${variable_if_else} ) { ?>[== ${template_if_true} =]<?pl } else { ?>[== ${template_if_false} =]<?pl } ?>
+
+[== 10 + 12 =]
+[== ${variable_expression_a} * ${variable_expression_b} =]
+[== ( ( ${variable_expression_a} * ${variable_expression_b} ) + ${variable_expression_a} - ${variable_expression_b} ) / ${variable_expression_b} =]
+[== substr( 'this has a substring.', 11, 9 ) =]
+[== substr( ${variable_function_arg}, 4, 2 ) =]

@@ -1,5 +1,9 @@
 Revision history for Perl extension Tenjin
 
+0.051	2010-02-18 18:51:00
+	- Fixed 'use of uninitialized value' warnings caused by $lspace and $rspace
+	- Removed references to pltenjin which caused the Makefile to fail
+
 0.05	2010-02-18 12:35:00
 	- Revised code structure, Tenjin::Engine is now just Tenjin
 	- Much faster template compilation

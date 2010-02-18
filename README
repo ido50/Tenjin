@@ -20,7 +20,7 @@ SYNOPSIS
             print $output;
 
 VERSION
-    0.05
+    0.051
 
 DESCRIPTION
     Tenjin is a very fast and full-featured templating engine, implemented
