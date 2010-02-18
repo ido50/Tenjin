@@ -3,28 +3,108 @@ NAME
 
 SYNOPSIS
             use Tenjin;
-            $Tenjin::USE_STRICT = 1; # use strict in the embedded Perl inside
-                                     # your templates. Optional but recommended.
 
-            my $engine = new Tenjin::Engine();
+            $Tenjin::USE_STRICT = 1;        # use strict in the embedded Perl inside
+                                            # your templates. Recommended, but not used
+                                            # by default.
+
+            $Tenjin::ENCODING = "utf8";     # set the encoding of your template files
+                                            # to utf8. This is the default encoding used
+                                            # so there's no need to do this if your
+                                            # templates really are utf8.
+
+            my $engine = Tenjin->new(\%options);
             my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
             my $filename = 'file.html';
             my $output = $engine->render($filename, $context);
             print $output;
 
+VERSION
+    0.05
+
 DESCRIPTION
     Tenjin is a very fast and full-featured templating engine, implemented
-    in several programming languages. It supports embedded Perl, nestable
-    layout template, inclusion of other templates inside a template,
-    capturing parts of or the entire template output, file and memory
-    caching, template arguments and preprocessing.
+    in several programming languages, among them Perl.
 
-    Tenjin also comes with a command line application, "pltenjin", for
-    rendering templates. For example, "pltenjin example.html" will render
-    the template stored in the example.html file. You can also convert a
-    template to Perl code by using "pltenjin -s example.html". This is the
-    code used internally by Tenjin when rendering templates. There are more
-    options, checkout SEE ALSO for links to the usage guides.
+    The Perl version of Tenjin supports embedded Perl code, nestable layout
+    template, inclusion of other templates inside a template, capturing
+    parts of or the entire template output, file and memory caching,
+    template arguments and preprocessing.
+
+    The original version of Tenjin is developed by Makoto Kuwata. This CPAN
+    version is developed by Ido Perlmuter and differs from the original in a
+    few key aspects:
+
+    *   Code is entirely revised, packages are separated into modules, with
+        a smaller number of packages than the original version. In
+        particular, the Tenjin::Engine module no longer exists, and is now
+        instead just the Tenjin module (i.e. this one).
+
+    *   Support for rendering templates from non-files sources (such as a
+        database) is added.
+
+    *   Ability to set the encoding of your templates is added.
+
+    *   HTML is encoded and decoded using the HTML::Entities module, instead
+        of internally.
+
+    *   The "pltenjin" script is not provided, at least for now.
+
+    To make it clear, this version of Tenjin might somehow divert from the
+    original Tenjin's roadmap. Although my aim is to be as compatible as
+    possible (and this version is always updated with features and changes
+    from the original), I cannot guarantee it. Please note that version 0.05
+    of this module is NOT backwards compatible with previous versions.
+
+METHODS
+  new \%options
+    This creates a new instant of Tenjin. "\%options" is a hash-ref
+    containing Tenjin's configuration options:
+
+    *   path - Array-ref of filesystem paths where templates will be
+        searched
+
+    *   prefix - A string that will be automatically prepended to template
+        names when searching for them in the path. Empty by default.
+
+    *   postfix - The default extension to be automtically appended to
+        template names when searching for them in the path. Don't forget to
+        include the dot, such as '.html'. Empty by default.
+
+    *   cache - If set to 1 (the default), compiled templates will be cached
+        on the filesystem.
+
+    *   preprocess - Enable template preprocessing (turned off by default).
+        Only use if you're actually using any preprocessed Perl code in your
+        templates.
+
+    *   layout - Name of a layout template that can be optionally used. If
+        set, templates will be automatically inserted into the layout
+        template, in the location where you use "[== $_content ==]".
+
+    *   strict - Another way to make Tenjin use strict on embedded Perl code
+        (turned off by default).
+
+    *   encoding - Another way to set the encoding of your template files
+        (set to utf8 by default).
+
+  render( $tmpl_name, [\%context, $layout] )
+    Renders a template whose name is identified by $tmpl_name. Remember that
+    a prefix and a postfix might be added if they where set when creating
+    the Tenjin instance.
+
+    $context is a hash-ref containing the variables that will be available
+    for usage inside the templates. So, for example, if your "\%context" is
+    { message => 'Hi there }, then you can use $message inside your
+    templates.
+
+    $layout is a flag denoting whether or not to render this template into
+    the layout template there was set when creating the Tenjin instance.
+
+    Please note that file templates are cached on disk (with a '.cache')
+    extension. Tenjin automatically deprecates these cache files every 10
+    seconds. If you find this value is too low, you can override the
+    $Tenjin::TIMESTAMP_INTERVAL variable with your preferred value.
 
 SEE ALSO
     The original Tenjin website is located at
@@ -40,30 +120,70 @@ SEE ALSO
     using a .plhtml extension for the templates instead of .html (this is
     entirely your choice).
 
-    Tenjin::Engine, Tenjin::Template, Catalyst::View::Tenjin.
+    Tenjin::Template, Catalyst::View::Tenjin.
+
+CHANGES
+    This version of Tenjin breaks backwards compatibility with previous
+    versions. In particular, the Tenjin::Engine module does not exist any
+    more and is instead integrated into this one. Templates are also
+    rendered entirely different (as per changes in the original tenjin)
+    which provides much faster rendering.
+
+    Upon upgrading to this version, you MUST perform the following changes
+    for your applications (or, if you're using Catalyst, you must also
+    upgrade Catalyst::View::Tenjin):
+
+    # "use Tenjin" as your normally would, but to get an instance of Tenjin
+    you must call "Tenjin->new()" instead of the old method of calling
+    "Tenjin::Engine->new()".
+    # Remove all your templates cache files (they are the '.cache' files in
+    your template directories), they are not compatible with the new
+    templates structure and WILL cause your application to fail if present.
 
 TODO
-    *   Check if all the sub-modules (like Tenjin::Context, Tenjin::HTML,
-        etc.) are really necessary.
-
-    *   In particular, check if Tenjin::HTML can be replaced with some
-        existing CPAN module.
-
-    *   Add the documentation files linked in SEE ALSO to the module
-        distribution, like in the original Tenjin.
-
-    *   Expand the description of this module.
+    *   Expand pod documentation and properly document the code, which is
+        hard to understand as it is.
 
     *   Create tests, adapted from the tests provided by the original
         Tenjin.
 
 AUTHOR
     Tenjin is developed by Makoto Kuwata at
-    <http://www.kuwata-lab.com/tenjin/>. Version 0.03 was tidied and
-    CPANized from the original 0.0.2 source by Ido Perelmutter
-    <ido50@yahoo.com>.
+    <http://www.kuwata-lab.com/tenjin/>. The CPAN version was tidied and
+    CPANized from the original 0.0.2 source (with later updates from Makoto
+    Kuwata's tenjin github repository) by Ido Perlmuter <ido@ido50.net>.
 
-COPYRIGHT & LICENSE
+BUGS
+    Please report any bugs or feature requests to "bug-tenjin at
+    rt.cpan.org", or through the web interface at
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Tenjin>. I will be
+    notified, and then you'll automatically be notified of progress on your
+    bug as I make changes.
+
+SUPPORT
+    You can find documentation for this module with the perldoc command.
+
+        perldoc Tenjin
+
+    You can also look for information at:
+
+    *   RT: CPAN's request tracker
+
+        <http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tenjin>
+
+    *   AnnoCPAN: Annotated CPAN documentation
+
+        <http://annocpan.org/dist/Tenjin>
+
+    *   CPAN Ratings
+
+        <http://cpanratings.perl.org/d/Tenjin>
+
+    *   Search CPAN
+
+        <http://search.cpan.org/dist/Tenjin/>
+
+LICENSE AND COPYRIGHT
     Tenjin is licensed under the MIT license.
 
             Copyright (c) 2007-2009 the aforementioned authors.
@@ -86,4 +206,6 @@ COPYRIGHT & LICENSE
             LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
             OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
             WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    See http://dev.perl.org/licenses/ for more information.
 
