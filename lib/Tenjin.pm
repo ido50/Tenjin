@@ -328,11 +328,11 @@ L<Catalyst::View::Tenjin>):
 
 =over
 
-=item # C<use Tenjin> as your normally would, but to get an instance
+=item * C<use Tenjin> as your normally would, but to get an instance
 of Tenjin you must call C<< Tenjin->new() >> instead of the old method
 of calling C<< Tenjin::Engine->new() >>.
 
-=item # Remove all your templates cache files (they are the '.cache' files
+=item * Remove all your templates cache files (they are the '.cache' files
 in your template directories), they are not compatible with the new
 templates structure and WILL cause your application to fail if present.
 
@@ -392,7 +392,7 @@ L<http://search.cpan.org/dist/Tenjin/>
 
 Tenjin is licensed under the MIT license.
 
-	Copyright (c) 2007-2009 the aforementioned authors.
+	Copyright (c) 2007-2010 the aforementioned authors.
 
 	Permission is hereby granted, free of charge, to any person obtaining
 	a copy of this software and associated documentation files (the

@@ -87,7 +87,7 @@ The CPAN version was tidied and CPANized from the original 0.0.2 source (with la
 
 Tenjin is licensed under the MIT license.
 
-	Copyright (c) 2007-2009 the aforementioned authors.
+	Copyright (c) 2007-2010 the aforementioned authors.
 
 	Permission is hereby granted, free of charge, to any person obtaining
 	a copy of this software and associated documentation files (the

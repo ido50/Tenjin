@@ -1,5 +1,10 @@
 Revision history for Perl extension Tenjin
 
+0.05	2010-02-18 12:35:00
+	- Revised code structure, Tenjin::Engine is now just Tenjin
+	- Much faster template compilation
+	- Not backwards compatible with previous versions!
+
 0.04	2009-08-01 18:00:00
 	- Fixed some typos in the documentation
 	- Added the ability to set the encoding of templates
