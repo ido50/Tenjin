@@ -133,12 +133,14 @@ CHANGES
     for your applications (or, if you're using Catalyst, you must also
     upgrade Catalyst::View::Tenjin):
 
-    # "use Tenjin" as your normally would, but to get an instance of Tenjin
-    you must call "Tenjin->new()" instead of the old method of calling
-    "Tenjin::Engine->new()".
-    # Remove all your templates cache files (they are the '.cache' files in
-    your template directories), they are not compatible with the new
-    templates structure and WILL cause your application to fail if present.
+    *   "use Tenjin" as your normally would, but to get an instance of
+        Tenjin you must call "Tenjin->new()" instead of the old method of
+        calling "Tenjin::Engine->new()".
+
+    *   Remove all your templates cache files (they are the '.cache' files
+        in your template directories), they are not compatible with the new
+        templates structure and WILL cause your application to fail if
+        present.
 
 TODO
     *   Expand pod documentation and properly document the code, which is
@@ -186,7 +188,7 @@ SUPPORT
 LICENSE AND COPYRIGHT
     Tenjin is licensed under the MIT license.
 
-            Copyright (c) 2007-2009 the aforementioned authors.
+            Copyright (c) 2007-2010 the aforementioned authors.
 
             Permission is hereby granted, free of charge, to any person obtaining
             a copy of this software and associated documentation files (the
