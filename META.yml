@@ -21,4 +21,4 @@ requires:
   Encode: 0
 resources:
   license: http://www.opensource.org/licenses/mit-license.php
-version: 0.051
+version: 0.052

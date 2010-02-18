@@ -8,7 +8,7 @@ use Tenjin::Util;
 use strict;
 use warnings;
 
-our $VERSION = 0.051;
+our $VERSION = 0.052;
 our $USE_STRICT = 0;
 our $ENCODING = 'utf8';
 our $BYPASS_TAINT   = 1; # unset if you like taint mode
@@ -208,7 +208,7 @@ Tenjin - Fast templating engine with support for embedded Perl.
 
 =head1 VERSION
 
-0.051
+0.052
 
 =head1 DESCRIPTION
 

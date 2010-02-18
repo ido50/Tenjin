@@ -1,5 +1,8 @@
 Revision history for Perl extension Tenjin
 
+0.052	2010-02-19 01:06:00
+	- Pointless update to remove git files from the release
+
 0.051	2010-02-18 18:51:00
 	- Fixed 'use of uninitialized value' warnings caused by $lspace and $rspace
 	- Removed references to pltenjin which caused the Makefile to fail
