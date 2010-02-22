@@ -12,8 +12,6 @@ all_from 'lib/Tenjin.pm';
 requires 'Encode' => 0;
 requires 'HTML::Entities' => 0;
 
-install_script 'pltenjin';
-
 test_requires 'Test::More';
 
 auto_install;

@@ -115,7 +115,10 @@ sub parse_stmt {
 		$self->parse_expr($bufref, $text) if $text;
 		$mspace = '' if $mspace eq ' ';
 		$stmt = $self->hook_stmt($stmt);
-		$self->add_stmt($bufref, $lspace . $mspace . $stmt . $rspace);
+		$stmt .= $rspace if $rspace;
+		$stmt = $mspace . $stmt if $mspace;
+		$stmt = $lspace . $stmt if $lspace;
+		$self->add_stmt($bufref, $stmt);
 	}
 	my $rest = $pos == 0 ? $input : substr($input, $pos);
 	$self->parse_expr($bufref, $rest) if $rest;

@@ -10,7 +10,6 @@ inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
-script/pltenjin
 lib/Tenjin.pm
 lib/Tenjin/Context.pm
 lib/Tenjin/Preprocessor.pm
@@ -23,3 +22,5 @@ README
 t/01use.t
 t/02pod.t
 t/03podcoverage.t
+t/test_tmpl.pl
+t/test_tmpl.html
