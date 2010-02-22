@@ -229,7 +229,7 @@ a smaller number of packages than the original version. In particular, the
 Tenjin::Engine module no longer exists, and is now instead just the Tenjin
 module (i.e. this one).
 
-=item * Support for rendering templates from non-files sources (such as
+=item * Support for rendering templates from non-file sources (such as
 a database) is added.
 
 =item * Ability to set the encoding of your templates is added.
@@ -249,9 +249,9 @@ of this module is NOT backwards compatible with previous versions.
 
 =head1 METHODS
 
-=head2 new \%options
+=head2 new( \%options )
 
-This creates a new instant of Tenjin. C<\%options> is a hash-ref
+This creates a new instance of Tenjin. C<\%options> is a hash-ref
 containing Tenjin's configuration options:
 
 =over
