@@ -200,6 +200,7 @@ Tenjin - Fast templating engine with support for embedded Perl.
 					# so there's no need to do this if your
 					# templates really are utf8.
 
+	my %options = ( path => '/path/to/templates', postfix => '.html' );
 	my $engine = Tenjin->new(\%options);
 	my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
 	my $filename = 'file.html';
