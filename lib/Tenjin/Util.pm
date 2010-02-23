@@ -2,43 +2,46 @@ package Tenjin::Util;
 
 use strict;
 use warnings;
-
-use Fcntl qw/:flock/;
 use Encode;
 use HTML::Entities;
 
-sub new {
-	bless {}, shift;
-}
+=head1 NAME
 
-sub read_file {
-	my ($self, $filename, $lock_required) = @_;
+Tenjin::Util - Utility methods for Tenjin.
 
-	open(IN, $filename) or die("Tenjin::Util: Can't open $filename for reading: $!");
-	binmode(IN);
-	flock(IN, LOCK_SH) if ($lock_required);
+=head1 SYNOPSIS
 
-	read(IN, my $content, -s $filename);
+	# in your templates:
+	
+	# encode a URL
+	[== encode_url('http://www.google.com/search?q=tenjin&ie=utf-8&oe=utf-8&aq=t') =]
+	# returns http%3A//www.google.com/search%3Fq%3Dtenjin%26ie%3Dutf-8%26oe%3Dutf-8%26aq%3Dt
 
-	close(IN);
+	# escape a string of lines of HTML code
+	<?pl	my $string = '<h1>You & Me</h1>\n<h2>Me & You</h2>'; ?>
+	[== text2html($string) =]
+	# returns &lt;h1&gt;You &amp; Me&lt;/h1&gt;<br />\n&lt;h2&gt;Me &amp; You&lt;/h2&gt;
 
-	return $content;
-}
+=head1 DESCRIPTION
 
-sub write_file {
-	my ($self, $filename, $content, $lock_required) = @_;
+This module provides a few utility functions which can be used in your
+templates for your convenience. These include functions to (un)escape
+and (en/de)code URLs.
 
-	open(OUT, ">$filename") or die("Tenjin::Util: \"Can't open $filename for writing: $!\"");
-	binmode(OUT);
-	flock(OUT, LOCK_EX) if $lock_required;
-	print OUT $content;
-	close(OUT);
-}
+=head1 METHODS
+
+=head2 expand_tabs( $str, [$tabwidth] )
+
+Receives a string that might contain tabs in it, and replaces those
+tabs with spaces, each tab with the number of spaces defined by C<$tabwidth>,
+or, if C<$tabwidth> was not passed, with 8 spaces.
+
+=cut
 
 sub expand_tabs {
-	my ($self, $str, $tabwidth) = @_;
+	my ($str, $tabwidth) = @_;
 
-	$tabwidth = 8 unless defined($tabwidth);
+	$tabwidth ||= 8;
 	my $s = '';
 	my $pos = 0;
 	while ($str =~ /.*?\t/sg) { # /(.*?)\t/ may be slow
@@ -54,128 +57,213 @@ sub expand_tabs {
 	return $s;
 }
 
+=head2 escape_xml( $str )
+
+Receives a string of XML (or (x)HTML) code and converts the characters
+<>&\' to HTML entities. This is the method that is invoked when you use
+[= $expression =] in your templates.
+
+=cut
+
+sub escape_xml {
+	encode_entities($_[0], '<>&"\'');
+}
+
+=head2 unescape_xml( $str )
+
+Receives a string of escaped XML (or (x)HTML) code (for example, a string
+that was escaped with the L<escape_xml()|escape_xml( $str )> function,
+and 'unescapes' all HTML entities back to their actual characters.
+
+=cut
+
+sub unescape_xml {
+	decode_entities($_[0]);
+}
+
+=head2 encode_url( $url )
+
+Receives a URL and encodes it by escaping 'non-standard' characters.
+
+=cut
+
+sub encode_url {
+	my $url = shift;
+
+	$url =~ s/([^-A-Za-z0-9_.\/])/sprintf("%%%02X", ord($1))/sge;
+	$url =~ tr/ /+/;
+	return $url;
+}
+
+=head2 decode_url( $url )
+
+Does the opposite of L<encode_url()|encode_url( $url )>.
+
+=cut
+
+sub decode_url {
+	my $url = shift;
+
+	$url =~ s/\%([a-fA-F0-9][a-fA-F0-9])/pack('C', hex($1))/sge;
+	return $url;
+}
+
+=head2 checked( $val )
+
+Receives a value of some sort, and if it is a true value, returns the string
+' checked="checked"' which can be appended to HTML checkboxes.
+
+=cut
+
+sub checked {
+	$_[0] ? ' checked="checked"' : '';
+}
+
+=head2 selected( $val )
+
+Receives a value of some sort, and if it is a true value, returns the string
+' selected="selected"' which can be used in an option in an HTML select box.
+
+=cut
+
+sub selected {
+	$_[0] ? ' selected="selected"' : '';
+}
+
+=head2 disabled( $val )
+
+Receives a value of some sort, and if it is a true value, returns the string
+' disabled="disabled"' which can be used in an HTML input.
+
+=cut
+
+sub disabled {
+	$_[0] ? ' disabled="disabled"' : '';
+}
+
+=head2 nl2br( $text )
+
+Receives a string of text containing lines delimited by newline characters
+(\n, or possibly \r\n) and appends an HTML line break (<br />) to every
+line (the newline character is left untouched).
+
+=cut
+
+sub nl2br {
+	my $text = shift;
+
+	$text =~ s/(\r?\n)/<br \/>$1/g;
+	return $text;
+}
+
+=head2 text2html( $text )
+
+Receives a string of text containing lines delimited by newline characters,
+and possibly some XML (or (x)HTML) code, escapes that code with
+L<escape_xml()|escape_xml( $str )> and then appends an HTML line break
+to every line with L<nl2br()|nl2br( $text )>.
+
+=cut
+
+sub text2html {
+	nl2br(escape_xml($_[0]));
+}
+
+=head2 tagattr( $name, $expr, [$value] )
+
+=cut
+
+sub tagattr {
+	my ($name, $expr, $value) = @_;
+
+	return '' unless $expr;
+	$value = $expr unless defined $value;
+	return " $name=\"$value\"";
+}
+
+=head2 tagattrs( %attrs )
+
+=cut
+
+sub tagattrs {
+	my (%attrs) = @_;
+
+	my $s = '';
+	while (my ($k, $v) = each %attrs) {
+		$s .= " $k=\"".escape_xml($v)."\"" if defined $v;
+	}
+	return $s;
+}
+
+=head2 new_cycle( @items )
+
+Creates a subroutine reference that can be used for cycling through the
+items of the C<@items> array. So, for example, you can:
+
+	my $cycle = new_cycle(qw/red green blue/);
+	print $cycle->(); # prints 'red'
+	print $cycle->(); # prints 'green'
+	print $cycle->(); # prints 'blue'
+	print $cycle->(); # prints 'red' again
+
+=cut
+
+sub new_cycle {
+	my $i = 0;
+	sub { $_[$i++ % scalar @_] };  # returns
+}
+
+=head1 INTERNAL(?) METHODS
+
+=head2 _p( $expression )
+
+Wraps a Perl expression in a customized wrapper which will be processed
+by the Tenjin preprocessor and replaced with the standard [== $expression =].
+
+=cut
 
 sub _p {
 	"<`\#$_[0]\#`>";
 }
 
+=head2 _P( $expression )
+
+Wrap a Perl expression in a customized wrapper which will be processed
+by the Tenjin preprocessor and replaced with the standard [= $expression =],
+which means the expression will be escaped.
+
+=cut
 
 sub _P {
 	"<`\$$_[0]\$`>";
 }
 
+=head2 _decode_params( $s )
+
+=cut
 
 sub _decode_params {
-	my ($self, $s) = @_;
+	my $s = shift;
 
 	return '' unless $s;
 
-	$s =~ s/%3C%60%23(.*?)%23%60%3E/'[=='.$self->decode_url($1).'=]'/ge;
-	$s =~ s/%3C%60%24(.*?)%24%60%3E/'[='.$self->decode_url($1).'=]'/ge;
-	$s =~ s/&lt;`\#(.*?)\#`&gt;/'[=='.$self->unescape_xml($1).'=]'/ge;
-	$s =~ s/&lt;`\$(.*?)\$`&gt;/'[='.$self->unescape_xml($1).'=]'/ge;
+	$s =~ s/%3C%60%23(.*?)%23%60%3E/'[=='.decode_url($1).'=]'/ge;
+	$s =~ s/%3C%60%24(.*?)%24%60%3E/'[='.decode_url($1).'=]'/ge;
+	$s =~ s/&lt;`\#(.*?)\#`&gt;/'[=='.unescape_xml($1).'=]'/ge;
+	$s =~ s/&lt;`\$(.*?)\$`&gt;/'[='.unescape_xml($1).'=]'/ge;
 	$s =~ s/<`\#(.*?)\#`>/[==$1=]/g;
 	$s =~ s/<`\$(.*?)\$`>/[=$1=]/g;
 
 	return $s;
 }
 
-sub escape_xml {
-	encode_entities($_[1], '<>&"\'');
-}
-
-sub unescape_xml {
-	decode_entities($_[1]);
-}
-
-sub encode_url {
-	my ($self, $s) = @_;
-
-	$s =~ s/([^-A-Za-z0-9_.\/])/sprintf("%%%02X", ord($1))/sge;
-	$s =~ tr/ /+/;
-	return $s;
-}
-
-sub decode_url {
-	my ($self, $s) = @_;
-
-	$s =~ s/\%([a-fA-F0-9][a-fA-F0-9])/pack('C', hex($1))/sge;
-	return $s;
-}
-
-sub checked {
-	$_[1] ? ' checked="checked"' : '';
-}
-
-sub selected {
-	$_[1] ? ' selected="selected"' : '';
-}
-
-sub disabled {
-	$_[1] ? ' disabled="disabled"' : '';
-}
-
-sub nl2br {
-	my ($self, $text) = @_;
-
-	$text =~ s/(\r?\n)/<br \/>$1/g;
-	return $text;
-}
-
-sub text2html {
-	my ($self, $text) = @_;
-
-	$self->nl2br($self->escape_xml($text));
-}
-
-sub tagattr {
-	my ($self, $name, $expr, $value) = @_;
-
-	return '' unless $expr;
-	$value = $expr unless defined($value);
-	return " $name=\"$value\"";
-}
-
-sub tagattrs {
-	my ($self, %attrs) = @_;
-
-	my $s = '';
-	while (my ($k, $v) = each %attrs) {
-		$s .= " $k=\"".$self->escape_xml($v)."\"" if defined $v;
-	}
-	return $s;
-}
-
-## ex.
-##   my $cycle = new_cycle('red', 'blue');
-##   print $cycle->();  #=> 'red'
-##   print $cycle->();  #=> 'blue'
-##   print $cycle->();  #=> 'red'
-##   print $cycle->();  #=> 'blue'
-sub new_cycle {
-	my $self = shift;
-
-	my $i = 0;
-	sub { $_[$i++ % scalar @_] };  # returns
-}
-
 __PACKAGE__;
 
 __END__
 
-=pod
-
-=head1 NAME
-
-Tenjin::Util - Utility methods for Tenjin.
-
-=head1 SYNOPSIS
-
-	used internally.
-
 =head1 SEE ALSO
 
-L<Tenjin>.
+L<Tenjin>, L<Tenjin::Template>, L<Tenjin::Context>.
 
 =head1 AUTHOR
 

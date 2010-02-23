@@ -2,7 +2,7 @@ package Tenjin::Template;
 
 use strict;
 use warnings;
-use Tenjin::Util;
+use Fcntl qw/:flock/;
 
 our $MACRO_HANDLER_TABLE = {
 	'include' => sub { my $arg = shift;
@@ -39,8 +39,6 @@ sub new {
 		'timestamp'  => undef,
 		'args'       => undef,
 	}, $class;
-
-	$self->{utils} = Tenjin::Util->new();
 	
 	$self->convert_file($filename) if $filename;
 
@@ -78,7 +76,7 @@ sub render {
 sub convert_file {
 	my ($self, $filename) = @_;
 
-	return $self->convert($self->{utils}->read_file($filename, 1), $filename);
+	return $self->convert($self->_read_file($filename, 1), $filename);
 }
 
 sub convert {
@@ -274,9 +272,50 @@ sub escaped_expr {
 
 	return "$self->{escapefunc}($expr)" if $self->{escapefunc};
 
-	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : \$_engine->{utils}->escape_xml($expr)" if $self->{rawclass};
+	return "(ref(\$_V = ($expr)) eq '$self->{rawclass}' ? \$_V->{str} : escape_xml($expr)" if $self->{rawclass};
 
-	return "\$_engine->{utils}->escape_xml($expr)";
+	return "escape_xml($expr)";
+}
+
+=head2 _read_file( $filename, [$lock_required] )
+
+Receives an absolute path to a template file, reads its content and
+returns it. If C<$lock_required> is passed (and has a true value), the
+file will be locked for reading.
+
+=cut
+
+sub _read_file {
+	my ($self, $filename, $lock_required) = @_;
+
+	open(IN, $filename) or die("Tenjin::Template: Can't open $filename for reading: $!");
+	binmode(IN);
+	flock(IN, LOCK_SH) if $lock_required;
+
+	read(IN, my $content, -s $filename);
+
+	close(IN);
+
+	return $content;
+}
+
+=head2 _write_file( $filename, $content, [$lock_required] )
+
+Receives an absolute path to a template file and the templates contents,
+and creates the file (or truncates it, if existing) with that contents.
+If C<$lock_required> is passed (and has a true value), the file will be
+locked exclusively when writing.
+
+=cut
+
+sub _write_file {
+	my ($self, $filename, $content, $lock_required) = @_;
+
+	open(OUT, ">$filename") or die("Tenjin::Template: \"Can't open $filename for writing: $!\"");
+	binmode(OUT);
+	flock(OUT, LOCK_EX) if $lock_required;
+	print OUT $content;
+	close(OUT);
 }
 
 __PACKAGE__;

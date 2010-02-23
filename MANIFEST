@@ -17,10 +17,12 @@ lib/Tenjin/Template.pm
 lib/Tenjin/Util.pm
 Makefile.PL
 MANIFEST			This list of files
-META.yml
 README
-t/01use.t
-t/02pod.t
-t/03podcoverage.t
+t/00-load.t
+t/manifest.t
+t/pod.t
+t/pod-coverage.t
 t/test_tmpl.pl
 t/test_tmpl.html
+t/test_layout_tmpl.html
+t/test_layout_tmpl_2.html

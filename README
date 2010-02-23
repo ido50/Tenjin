@@ -20,7 +20,7 @@ SYNOPSIS
             print $output;
 
 VERSION
-    0.052
+    0.06
 
 DESCRIPTION
     Tenjin is a very fast and full-featured templating engine, implemented
@@ -57,7 +57,7 @@ DESCRIPTION
     of this module is NOT backwards compatible with previous versions.
 
 METHODS
-  new \%options
+  new( \%options )
     This creates a new instant of Tenjin. "\%options" is a hash-ref
     containing Tenjin's configuration options:
 
@@ -72,7 +72,8 @@ METHODS
         include the dot, such as '.html'. Empty by default.
 
     *   cache - If set to 1 (the default), compiled templates will be cached
-        on the filesystem.
+        on the filesystem (this means the template's code will be cached,
+        not the completed rendered output).
 
     *   preprocess - Enable template preprocessing (turned off by default).
         Only use if you're actually using any preprocessed Perl code in your
@@ -88,7 +89,7 @@ METHODS
     *   encoding - Another way to set the encoding of your template files
         (set to utf8 by default).
 
-  render( $tmpl_name, [\%context, $layout] )
+  render( $tmpl_name, [\%context, $use_layout] )
     Renders a template whose name is identified by $tmpl_name. Remember that
     a prefix and a postfix might be added if they where set when creating
     the Tenjin instance.
@@ -98,13 +99,71 @@ METHODS
     { message => 'Hi there }, then you can use $message inside your
     templates.
 
-    $layout is a flag denoting whether or not to render this template into
-    the layout template there was set when creating the Tenjin instance.
+    $use_layout is a flag denoting whether or not to render this template
+    into a layout template (when doing so, the template will be rendered,
+    then the rendered output will be added to the context hash-ref as
+    '_content', and finally the layout template will be rendered with the
+    revised context and returned. If $use_layout is 1, than Tenjin will use
+    the layout template that was set when creating the Tenjin instance (via
+    the 'layout' configuration option). If you want to use a different
+    layout template (or if you haven't defined a layout template when
+    creating the Tenjin instance), then you must add the layout template's
+    name to the context as '_layout'. You can also just pass the layout
+    template's name as $use_layout, which has precendence over
+    "$context->{_layout}". If $use_layout is 0 or undefined, then a layout
+    template will not be used, even if "$context->{_layout}" is defined.
 
-    Please note that file templates are cached on disk (with a '.cache')
-    extension. Tenjin automatically deprecates these cache files every 10
-    seconds. If you find this value is too low, you can override the
-    $Tenjin::TIMESTAMP_INTERVAL variable with your preferred value.
+    Please note that by default file templates are cached on disk (with a
+    '.cache') extension. Tenjin automatically deprecates these cache files
+    every 10 seconds. If you find this value is too low, you can override
+    the $Tenjin::TIMESTAMP_INTERVAL variable with your preferred value.
+
+INTERNAL METHODS
+  register_template( $template_name, $template )
+    Receives the name of a template and its Tenjin::Template object and
+    stores it in memory for usage by the engine.
+
+  get_template( $template_name, $context )
+    Receives the name of a template and the context object and tries to find
+    that template in the engine's memory. If it's not there, it will try to
+    find it in the file system (the cache file might be loaded, if present).
+    Returns the templates Tenjin::Template object.
+
+  to_filename( $template_name )
+    Receives a template name and returns the proper file name to be searched
+    in the file system, which will only be different than $template_name if
+    it begins with ':', in which case the prefix and postfix configuration
+    options will be appended and prepended to the template name (minus the
+    ':'), respectively.
+
+  find_template_file( $filename )
+    Receives a template filename and searches for it in the path defined in
+    the configuration options (or, if a path was not set, in the current
+    working directory). Returns the absolute path to the file.
+
+  read_template_file( $template, $filename, $context )
+    Receives a template object and its absolute file path and reads that
+    file. If preprocessing is on, preprocessing will take place using the
+    provided context object.
+
+  cachename( $filename )
+    Receives a template filename and returns its standard cache filename
+    (which will simply be $filename with '.cache' appended to it.
+
+  store_cachefile( $cachename, $template )
+    Receives the name of a template cache file and the corrasponding
+    template object, and creates the cache file on disk.
+
+  load_cachefile( $cachename, $template )
+    Receives the name of a template cache file and the corrasponding
+    template object, reads the cache file and stores it in the template
+    object (as 'script').
+
+  create_template( $filename, $context )
+    Receives an absolute path to a template file and the context object,
+    reads the file, processes it (which may involve loading the template's
+    cache file or creating the template's cache file), compiles it and
+    returns the template object.
 
 SEE ALSO
     The original Tenjin website is located at
@@ -120,18 +179,18 @@ SEE ALSO
     using a .plhtml extension for the templates instead of .html (this is
     entirely your choice).
 
-    Tenjin::Template, Catalyst::View::Tenjin.
+    Tenjin::Template, Catalyst::View::Tenjin, Dancer::Template::Tenjin.
 
 CHANGES
-    This version of Tenjin breaks backwards compatibility with previous
+    Version 0.05 of this module broke backwards compatibility with previous
     versions. In particular, the Tenjin::Engine module does not exist any
     more and is instead integrated into this one. Templates are also
     rendered entirely different (as per changes in the original tenjin)
     which provides much faster rendering.
 
-    Upon upgrading to this version, you MUST perform the following changes
-    for your applications (or, if you're using Catalyst, you must also
-    upgrade Catalyst::View::Tenjin):
+    Upon upgrading to versions 0.05 and above, you MUST perform the
+    following changes for your applications (or, if you're using Catalyst,
+    you must also upgrade Catalyst::View::Tenjin):
 
     *   "use Tenjin" as your normally would, but to get an instance of
         Tenjin you must call "Tenjin->new()" instead of the old method of
@@ -141,6 +200,9 @@ CHANGES
         in your template directories), they are not compatible with the new
         templates structure and WILL cause your application to fail if
         present.
+
+    Version 0.06 (this version) restored the layout template feature which
+    was accidentaly missing in version 0.05.
 
 TODO
     *   Expand pod documentation and properly document the code, which is
