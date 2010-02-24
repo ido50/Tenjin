@@ -482,7 +482,7 @@ The CPAN version of Tenjin was forked by Ido Perlmuter E<lt>ido at ido50.netE<gt
 from version 0.0.2 of the original plTenjin, which is developed by Makoto Kuwata
 at L<http://www.kuwata-lab.com/tenjin/>.
 
-Development of Tenjin is done with gitHub at L<http://github.com/ido50/Tenjin>.
+Development of Tenjin is done with github at L<http://github.com/ido50/Tenjin>.
 
 =head1 ACKNOWLEDGEMENTS
 
