@@ -14,7 +14,7 @@ Tenjin::Context - In charge of managing variables passed to Tenjin templates.
 	# in charge of the context object:
 
 	# in your templates (unnecessary, for illustration purposes):
-	<title>[== $context->{title} =]</title>
+	<title>[== $_context->{title} =]</title>
 	# instead use:
 	<title>[== $title =]</title>
 
@@ -77,7 +77,7 @@ will be appended to the script prior to its evaluation.
 sub evaluate {
 	my ($self, $script, $filename) = @_;
 
-	my $context = $self;
+	my $_context = $self;
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
 	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
 	$s .= $script;
@@ -107,7 +107,7 @@ sub to_func {
 
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
 	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
-	$s .= "sub { my (\$context) = \@_; $script }";
+	$s .= "sub { my (\$_context) = \@_; $script }";
 	
 	my $ret;
 	if ($Tenjin::USE_STRICT) {
@@ -136,8 +136,8 @@ sub _build_decl {
 
 	my $s = '';
 	foreach my $k (keys %$self) {
-		next if $k eq '_context' || $k eq 'context';
-		$s .= "my \$$k = \$context->{'$k'}; ";
+		next if $k eq '_context';
+		$s .= "my \$$k = \$_context->{'$k'}; ";
 	}
 	return $s;
 }

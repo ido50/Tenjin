@@ -41,16 +41,16 @@ handled by this module.
 
 our $MACRO_HANDLER_TABLE = {
 	'include' => sub { my $arg = shift;
-		" \$_buf .= \$context->{'_engine'}->render($arg, \$context, 0);";
+		" \$_buf .= \$_context->{'_engine'}->render($arg, \$_context, 0);";
 	},
 	'start_capture' => sub { my $arg = shift;
 		" my \$_buf_bkup=\$_buf; \$_buf=''; my \$_capture_varname=$arg;";
 	},
 	'stop_capture' => sub { my $arg = shift;
-		" \$context->{\$_capture_varname}=\$_buf; \$_buf=\$_buf_bkup;";
+		" \$_context->{\$_capture_varname}=\$_buf; \$_buf=\$_buf_bkup;";
 	},
 	'start_placeholder' => sub { my $arg = shift;
-		" if (\$context->{$arg}) { \$_buf .= \$context->{$arg}; } else {";
+		" if (\$_context->{$arg}) { \$_buf .= \$_context->{$arg}; } else {";
 	},
 	'stop_placeholder' => sub { my $arg = shift;
 		" }";
@@ -99,7 +99,7 @@ sub new {
 	return $self;
 }
 
-=head2 render( [$context] )
+=head2 render( [$_context] )
 
 Renders the template, possibly with a context hash-ref, and returns the
 rendered output. If errors have occured when rendering the template (which
@@ -108,7 +108,7 @@ will trigger a C<die>!
 
 If you do not want to C<die> when encountering errors in templates, or wish
 to cache the errors yourself (as the L<Tenjin> engine does itself), then you
-need to call L<_render()|_render( [$context] )> instead.
+need to call L<_render()|_render( [$_context] )> instead.
 
 =cut
 
@@ -123,7 +123,7 @@ sub render {
 	return $output;
 }
 
-=head2 _render( [$context] )
+=head2 _render( [$_context] )
 
 Renders the template, possibly with a context hash-ref, and returns the
 rendered output.
@@ -131,19 +131,19 @@ rendered output.
 =cut
 
 sub _render {
-	my ($self, $context) = @_;
+	my ($self, $_context) = @_;
 
-	$context ||= {};
+	$_context ||= {};
 
 	if ($self->{func}) {
-		return $self->{func}->($context);
+		return $self->{func}->($_context);
 	} else {
-		if (ref($context) eq 'HASH') {
-			$context = $Tenjin::CONTEXT_CLASS->new($context);
+		if (ref($_context) eq 'HASH') {
+			$_context = $Tenjin::CONTEXT_CLASS->new($_context);
 		}
 		my $script = $self->{script};
-		$script = $context->_build_decl() . $script unless $self->{args};
-		return $context->evaluate($script, $self->{filename});
+		$script = $_context->_build_decl() . $script unless $self->{args};
+		return $_context->evaluate($script, $self->{filename});
 	}
 }
 
@@ -279,7 +279,7 @@ sub hook_stmt {
 				die "Tenjin::Template: \"$arg: only '\$var' is available for template argument.\"" unless (!$1 || $1 eq '$');
 				my $name = $2;
 				push(@args, $name);
-				push(@declares, "my \$$name = \$context->{$name}; ");
+				push(@declares, "my \$$name = \$_context->{$name}; ");
 			}
 			$self->{args} = \@args;
 			return $lspace . join('', @declares) . $rspace;
@@ -307,9 +307,9 @@ they were one unit, so the context variable applies to both.
 Tells Tenjin to capture the output of the rendered template from the point
 where C<start_capture()> was called to the point where C<end_capture()>
 was called. You must provide a name for the captured portion, which will be
-made available in the context as C<< $context->{$name} >> for immediate
+made available in the context as C<< $_context->{$name} >> for immediate
 usage. Note that the captured portion will not be printed unless you do
-so explicilty with C<< $context->{$name} >>.
+so explicilty with C<< $_context->{$name} >>.
 
 =item * C<start_placeholder( $var )> and C<end_placeholder()>
 
@@ -448,9 +448,9 @@ sub defun {   ## (experimental)
 		$funcname = 'render_' . $funcname;
 	}
 
-	my $str = "sub $funcname { my (\$context) = \@_; ";
+	my $str = "sub $funcname { my (\$_context) = \@_; ";
 	foreach (@args) {
-		$str .= "my \$$_ = \$context->{'$_'}; ";
+		$str .= "my \$$_ = \$_context->{'$_'}; ";
 	}
 	$str .= $self->{script};
 	$str .= "}\n";
