@@ -5,6 +5,7 @@ Revision history for Perl extension Tenjin
 	- Restored the layou templates precedence to the same used in plTenjin
 	- Renamed the context variable back to $_context
 	- Added some real CPAN tests to the distro
+	- Moved from Module::Install to ExtUtils::MakeMaker for the Makefile
 
 0.06	2010-02-24 12:30:00
 	- Restored the layout template feature which went MIA on 0.05
