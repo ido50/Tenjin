@@ -1,6 +1,6 @@
 Revision history for Perl extension Tenjin
 
-0.06	2010-02-24 00:00:00
+0.06	2010-02-24 12:30:00
 	- Restored the layout template feature which went MIA on 0.05
 	- Broadened the documentation for the layout template feature
 	  and macro functions
