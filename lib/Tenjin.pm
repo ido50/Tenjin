@@ -202,8 +202,6 @@ sub render {
 	return $output;
 }
 
-=head1 INTERNAL METHODS
-
 =head2 register_template( $template_name, $template )
 
 Receives the name of a template and its L<Tenjin::Template> object
@@ -217,6 +215,8 @@ sub register_template {
 	$template->{timestamp} = time;
 	$self->{templates}->{$template_name} = $template;
 }
+
+=head1 INTERNAL METHODS
 
 =head2 get_template( $template_name, $context )
 
@@ -440,7 +440,8 @@ templates structure and WILL cause your application to fail if present.
 =back
 
 Version 0.06 (this version) restored the layout template feature which was
-accidentaly missing in version 0.05.
+accidentaly missing in version 0.05, and the ability to call the utility
+methods of L<Tenjin::Util> natively inside templates.
 
 =head1 TODO
 

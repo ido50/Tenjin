@@ -26,3 +26,4 @@ t/test_tmpl.pl
 t/test_tmpl.html
 t/test_layout_tmpl.html
 t/test_layout_tmpl_2.html
+t/test_capt.html

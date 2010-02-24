@@ -27,4 +27,5 @@ print	"Standalone rendering of test_tmpl.html:\n",		$t->render('test_tmpl.html',
 print	"\n\n\nRendered inside test_layout_tmpl.html:\n",	$t->render('test_tmpl.html', $context, 1);
 print	"\n\n\nRendered inside test_layout_tmpl_2.html:\n",	$t->render('test_tmpl.html', $context, 'test_layout_tmpl_2.html');
 print	"\n\n\nUsing Tenjin Utility methods:\n",		$t->render('test_util.html', $context), "\n";
+print	"\n\n\nCapture and Placeholder:\n",			$t->render('test_capt.html', $context), "\n";
 

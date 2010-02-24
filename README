@@ -118,11 +118,11 @@ METHODS
     every 10 seconds. If you find this value is too low, you can override
     the $Tenjin::TIMESTAMP_INTERVAL variable with your preferred value.
 
-INTERNAL METHODS
   register_template( $template_name, $template )
     Receives the name of a template and its Tenjin::Template object and
     stores it in memory for usage by the engine.
 
+INTERNAL METHODS
   get_template( $template_name, $context )
     Receives the name of a template and the context object and tries to find
     that template in the engine's memory. If it's not there, it will try to
@@ -202,7 +202,8 @@ CHANGES
         present.
 
     Version 0.06 (this version) restored the layout template feature which
-    was accidentaly missing in version 0.05.
+    was accidentaly missing in version 0.05, and the ability to call the
+    utility methods of Tenjin::Util natively inside templates.
 
 TODO
     *   Expand pod documentation and properly document the code, which is

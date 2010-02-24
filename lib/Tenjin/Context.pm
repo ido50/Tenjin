@@ -30,6 +30,9 @@ or more correctly, for evaluating the Perl code created from the templates,
 first integrating the context variables to them, and returning the rendered
 output.
 
+Finally, this module makes the Tenjin utility methods of L<Tenjin::Util>
+available natively inside templates. See L<Tenjin::Util> for more info.
+
 =head1 INTERNAL METHODS
 
 =head2 new( [\%vars] )
@@ -139,6 +142,44 @@ sub _build_decl {
 	return $s;
 }
 
+=head1 UTILITY METHODS
+
+These methods are defined in L<Tenjin::Util> and used here so they are
+made available natively inside templates. See L<Tenjin::Util> for more
+information.
+
+=head2 _p( $expr )
+
+=head2 _P( $expr )
+
+=head2 escape( $expr )
+
+=head2 escape_xml( $expr )
+
+=head2 unescape_xml( $expr )
+
+=head2 encode_url( $url )
+
+=head2 decode_url( $url )
+
+=head2 checked( $expr )
+
+=head2 selected( $expr )
+
+=head2 disabled( $expr )
+
+=head2 nl2br( $text )
+
+=head2 text2html( $text )
+
+=head2 tagattr( $name, $expr, [$value] )
+
+=head2 tagattrs( %attrs )
+
+=head2 new_cycle( @items )
+
+=cut
+
 # this makes the Tenjin utility methods available to templates 'natively'
 *_p = *Tenjin::Util::_p;
 *_P = *Tenjin::Util::_P;
@@ -162,7 +203,7 @@ __END__
 
 =head1 SEE ALSO
 
-L<Tenjin>, L<Tenjin::Template>.
+L<Tenjin>, L<Tenjin::Util>, L<Tenjin::Template>.
 
 =head1 AUTHOR
 

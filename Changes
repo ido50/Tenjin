@@ -3,9 +3,12 @@ Revision history for Perl extension Tenjin
 0.06	2010-02-24 00:00:00
 	- Restored the layout template feature which went MIA on 0.05
 	- Broadened the documentation for the layout template feature
-	- Made the utility functions available in Tenjin::Context again
+	  and macro functions
+	- Made the utility functions available in templates natively again
 	- Added documentation for all modules and methods
 	- Fixed bug when preprocessing templates
+	- Made a test script (not yet an actual CPAN test)
+	- Cleaned distro files
 
 0.052	2010-02-19 01:06:00
 	- Pointless update to remove git files from the release

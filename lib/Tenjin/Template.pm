@@ -4,6 +4,41 @@ use strict;
 use warnings;
 use Fcntl qw/:flock/;
 
+=head1 NAME
+
+Tenjin::Template - A Tenjin template object, either built from a file
+or from memory.
+
+=head1 SYNOPSIS
+
+	# mostly used internally, but you can manipulate
+	# templates like so
+
+	my $template = Tenjin::Template->new('/path/to/templates/template.html');
+	my $context = { scalar => 'scalar', arrayref => ['one', 2, "3"] };
+	$template->render($context);
+
+=head1 DESCRIPTION
+
+This module is in charge of the task of compiling Tenjin templates.
+Templates in Tenjin are compiled into standard Perl code (combined with
+any Perl code used inside the templates themselves). Rendering a template
+means C<eval>uating that Perl code and returning its output.
+
+The Tenjin engine reads a template file or a template string, and creates
+a Template object from it. Then the object compiles itself by traversing
+the template, parsing Tenjin macros like 'include' and 'start_capture',
+replaces Tenjin expressions (i.e. C<[== $expr =]> or C<[= $expr =]>) with the
+appropriate Perl code, etc. This module ties a template object with
+a context object, but all context manipulation (and the actual C<eval>uation
+of the Perl code) is done by L<Tenjin::Context>.
+
+If you're planning on using this module by itself (i.e. without the L<Tenjin>
+engine), keep in mind that template caching and layout templates are not
+handled by this module.
+
+=cut
+
 our $MACRO_HANDLER_TABLE = {
 	'include' => sub { my $arg = shift;
 		" \$_buf .= \$context->{'_engine'}->render($arg, \$context, 0);";
@@ -25,6 +60,25 @@ our $MACRO_HANDLER_TABLE = {
 	},
 };
 
+=head1 METHODS
+
+=head2 new( [$filename, \%opts] )
+
+Creates a new Tenjin::Template object, possibly from a file on the file
+system (in which case C<$filename> must be provided and be an absolute
+path to a template file). Optionally, a hash-ref of options can be
+passed to set some customizations. Available options are 'escapefunc',
+which will be in charge of escaping expressions (from C<[= $expr =]>) instead
+of the internal method (which uses L<HTML::Entities>); and 'rawclass',
+which can be used to prevent variables and objects of a certain class
+from being escaped, in which case the variable must be a hash-ref
+that has a key named 'str', which will be used instead. So, for example,
+if you have a variable named C<$var> which is a hash-ref, and 'rawclass'
+is set as 'HASH', then writing C<[= $var =]> on your templates will replace
+C<$var> with C<< $var->{str} >>.
+
+=cut
+
 sub new {
 	my ($class, $filename, $opts) = @_;
 
@@ -45,6 +99,37 @@ sub new {
 	return $self;
 }
 
+=head2 render( [$context] )
+
+Renders the template, possibly with a context hash-ref, and returns the
+rendered output. If errors have occured when rendering the template (which
+might happen since templates have and are Perl code), then the error
+will trigger a C<die>!
+
+If you do not want to C<die> when encountering errors in templates, or wish
+to cache the errors yourself (as the L<Tenjin> engine does itself), then you
+need to call L<_render()|_render( [$context] )> instead.
+
+=cut
+
+sub render {
+	my $self = shift;
+
+	my $output = $self->_render(@_);
+	if ($@) {  # error happened
+		my $template_filename = $self->{filename};
+		die "Tenjin::Template: \"Error rendering " . $self->{filename} . "\"\n", $@;
+	}
+	return $output;
+}
+
+=head2 _render( [$context] )
+
+Renders the template, possibly with a context hash-ref, and returns the
+rendered output.
+
+=cut
+
 sub _render {
 	my ($self, $context) = @_;
 
@@ -62,22 +147,31 @@ sub _render {
 	}
 }
 
-sub render {
-	my $self = shift;
+=head1 INTERNAL METHODS
 
-	my $output = $self->_render(@_);
-	if ($@) {  # error happened
-		my $template_filename = $self->{filename};
-		die "Tenjin::Template: \"Error rendering " . $self->{filename} . "\"\n", $@;
-	}
-	return $output;
-}
+=head2 convert_file( $filename )
+
+Receives an absolute path to a template file, converts that file
+to Perl code by calling L<convert()|convert( $input, $filename )> and
+returns that code.
+
+=cut
 
 sub convert_file {
 	my ($self, $filename) = @_;
 
 	return $self->convert($self->_read_file($filename, 1), $filename);
 }
+
+=head2 convert( $input, [$filename] )
+
+Receives a text of a template (i.e. the template itself) and possibly
+an absolute path to the template file (if the template comes from a file),
+and converts the template into Perl code, which is later C<eval>uated
+for rendering. Conversion is done by parsing the statements in the
+template (see L<parse_stmt()|parse_stmt( $bufref, $input )>).
+
+=cut
 
 sub convert {
 	my ($self, $input, $filename) = @_;
@@ -89,16 +183,52 @@ sub convert {
 	return $self->{script} = $buf[0] . " \$_buf;\n";
 }
 
-sub compile_stmt_pattern {
-	my $pi = shift;
+=head2 compile_stmt_pattern( $pl )
 
-	my $pat = '((^[ \t]*)?<\?'.$pi.'( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?)';
+Receives a string which denotes the Perl code delimiter which is used
+inside templates. Tenjin uses 'C<< <?pl ... ?> >>' and 'C<< <?PL ... ?> >>'
+(the latter for preprocessing), so C<$pl> will be 'pl'. This method
+returns a tranlsation regular expression which will be used for reading
+embedded Perl code.
+
+=cut
+
+sub compile_stmt_pattern {
+	my $pl = shift;
+
+	my $pat = '((^[ \t]*)?<\?'.$pl.'( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?)';
 	return qr/$pat/sm;
 }
+
+=head2 stmt_pattern
+
+Returns the default pattern (which uses 'pl') with the
+L<previous_method|compile_stmt_pattern( $pl )>.
+
+=cut
 
 sub stmt_pattern {
 	return compile_stmt_pattern('pl');
 }
+
+=head2 expr_pattern()
+
+Defines how expressions are written in Tenjin templates (C<[== $expr =]>
+and C<[= $expr =]>).
+
+=cut
+
+sub expr_pattern {
+	return qr/\[=(=?)(.*?)(=?)=\]/s;
+}
+
+=head2 parse_stmt( $bufref, $input )
+
+Receives a buffer which is used for saving a template's expressions
+and the template's text, parses all expressions in the templates and
+pushes them to the buffer.
+
+=cut
 
 sub parse_stmt {
 	my ($self, $bufref, $input) = @_;
@@ -121,6 +251,10 @@ sub parse_stmt {
 	my $rest = $pos == 0 ? $input : substr($input, $pos);
 	$self->parse_expr($bufref, $rest) if $rest;
 }
+
+=head2 hook_stmt( $stmt )
+
+=cut
 
 sub hook_stmt {
 	my ($self, $stmt) = @_;
@@ -155,6 +289,47 @@ sub hook_stmt {
 	return $stmt;
 }
 
+=head2 expand_macro( $funcname, $arg )
+
+This method is in charge of invoking macro functions which might be used
+inside templates. The following macros are available:
+
+=over
+
+=item * C<include( $filename )>
+
+Includes another template, whose name is C<$filename>, inside the current
+template. The included template will be placed inside the template as if
+they were one unit, so the context variable applies to both.
+
+=item * C<start_capture( $name )> and C<end_capture()>
+
+Tells Tenjin to capture the output of the rendered template from the point
+where C<start_capture()> was called to the point where C<end_capture()>
+was called. You must provide a name for the captured portion, which will be
+made available in the context as C<< $context->{$name} >> for immediate
+usage. Note that the captured portion will not be printed unless you do
+so explicilty with C<< $context->{$name} >>.
+
+=item * C<start_placeholder( $var )> and C<end_placeholder()>
+
+This is a special method which can be used for making your templates a bit
+cleaner. Suppose your context might have a variable whose name is defined
+in C<$var>. If that variable exists in the context, you simply want to print
+it, but if it's not, you want to print and/or perform other things. In that
+case you can call C<start_placeholder( $var )> with the name of the context
+variable you want printed, and if it's not, anything you do between
+C<start_placeholder()> and C<end_placeholder()> will be printed instead.
+
+=item * echo( $exr )
+
+Just prints the provided expression. You might want to use it if you're
+a little too comfortable with PHP.
+
+=back
+
+=cut
+
 sub expand_macro {
 	my ($self, $funcname, $arg) = @_;
 
@@ -162,9 +337,9 @@ sub expand_macro {
 	return $handler ? $handler->($arg) : undef;
 }
 
-sub expr_pattern {
-	return qr/\[=(=?)(.*?)(=?)=\]/s;
-}
+=head2 get_expr_and_escapeflag( $not_escape, $expr, $delete_newline )
+
+=cut
 
 ## ex. get_expr_and_escapeflag('=', '$item->{name}', '')  => 1, '$item->{name}', 0
 sub get_expr_and_escapeflag {
@@ -172,6 +347,10 @@ sub get_expr_and_escapeflag {
 
 	return $expr, $not_escape eq '', $delete_newline eq '=';
 }
+
+=head2 parse_expr( $bufref, $input )
+
+=cut
 
 sub parse_expr {
 	my ($self, $bufref, $input) = @_;
@@ -199,17 +378,29 @@ sub parse_expr {
 	$self->stop_text_part($bufref);
 }
 
+=head2 start_text_part( $bufref )
+
+=cut
+
 sub start_text_part {
 	my ($self, $bufref) = @_;
 
 	$bufref->[0] .= ' $_buf .= ';
 }
 
+=head2 stop_text_part( $bufref )
+
+=cut
+
 sub stop_text_part {
 	my ($self, $bufref) = @_;
 
 	$bufref->[0] .= '; ';
 }
+
+=head2 add_text( $bufref, $text )
+
+=cut
 
 sub add_text {
 	my ($self, $bufref, $text) = @_;
@@ -220,11 +411,19 @@ sub add_text {
 	$bufref->[0] .= $is_start ? "q`$text`" : " . q`$text`";
 }
 
+=head2 add_stmt( $bufref, $stmt )
+
+=cut
+
 sub add_stmt {
 	my ($self, $bufref, $stmt) = @_;
 
 	$bufref->[0] .= $stmt;
 }
+
+=head2 add_expr( $bufref, $expr, $flag_escape )
+
+=cut
 
 sub add_expr {
 	my ($self, $bufref, $expr, $flag_escape) = @_;
@@ -232,6 +431,10 @@ sub add_expr {
 	my $dot = $bufref->[0] =~ / \$_buf \.= \Z/ ? '' : ' . ';
 	$bufref->[0] .= $dot . ($flag_escape ? $self->escaped_expr($expr) : "($expr)");
 }
+
+=head2 defun( $funcname, @args )
+
+=cut
 
 sub defun {   ## (experimental)
 	my ($self, $funcname, @args) = @_;
@@ -255,6 +458,10 @@ sub defun {   ## (experimental)
 	return $str;
 }
 
+=head2 compile()
+
+=cut
+
 ## compile $self->{script} into closure.
 sub compile {
 	my $self = shift;
@@ -266,6 +473,16 @@ sub compile {
 	}
 	return undef;
 }
+
+=head2 escaped_expr( $expr )
+
+Receives a Perl expression (from C<[= $expr =]>) and escapes it. This will
+happen in one of three ways: with the escape function defined in
+C<< $opts->{escapefunc} >> (if defined), with a scalar string (if
+C<< $opts->{rawclass} >> is defined), or with C<escape_xml()> from
+L<Tenjin::Util>, which uses L<HTML::Entites>.
+
+=cut
 
 sub escaped_expr {
 	my ($self, $expr) = @_;
@@ -321,16 +538,6 @@ sub _write_file {
 __PACKAGE__;
 
 __END__
-
-=pod
-
-=head1 NAME
-
-Tenjin::Template
-
-=head1 SYNOPSIS
-
-	used internally.
 
 =head1 SEE ALSO
 
