@@ -441,7 +441,8 @@ templates structure and WILL cause your application to fail if present.
 
 Version 0.06 (this version) restored the layout template feature which was
 accidentaly missing in version 0.05, and the ability to call the utility
-methods of L<Tenjin::Util> natively inside templates.
+methods of L<Tenjin::Util> natively inside templates. You will want to
+remove your templates' .cache files when upgrading to 0.6 too.
 
 =head1 TODO
 
