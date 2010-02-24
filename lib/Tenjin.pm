@@ -62,7 +62,7 @@ a smaller number of packages than the original version. In particular, the
 Tenjin::Engine module no longer exists, and is now instead just the Tenjin
 module (i.e. this one).
 
-=item * Support for rendering templates from non-files sources (such as
+=item * Support for rendering templates from non-file sources (such as
 a database) is added.
 
 =item * Ability to set the encoding of your templates is added.
@@ -78,7 +78,7 @@ To make it clear, this version of Tenjin might somehow divert from the
 original Tenjin's roadmap. Although my aim is to be as compatible as
 possible (and this version is always updated with features and changes
 from the original), I cannot guarantee it. Please note that version 0.05
-of this module is NOT backwards compatible with previous versions.
+(and above) of this module is NOT backwards compatible with previous versions.
 
 =head1 METHODS
 
@@ -148,18 +148,17 @@ Renders a template whose name is identified by C<$tmpl_name>. Remember that a pr
 and a postfix might be added if they where set when creating the Tenjin instance.
 
 C<$context> is a hash-ref containing the variables that will be available for usage inside
-the templates. So, for example, if your C<\%context> is { message => 'Hi there }, then
-you can use C<$message> inside your templates.
+the templates. So, for example, if your C<\%context> is C<< { message => 'Hi there' } >>, then you can use C<$message> inside your templates.
 
 C<$use_layout> is a flag denoting whether or not to render this template into a layout
 template (when doing so, the template will be rendered, then the rendered output will be
-added to the context hash-ref as '_content', and finally the layout template will be rendered
-with the revised context and returned. If C<$use_layout> is 1, than Tenjin will use the
-layout template that was set when creating the Tenjin instance (via the 'layout' configuration
+added to the context hash-ref as '_content', and finally the layout template will be rendered with the revised context and returned.
+
+If C<$use_layout> is 1, than Tenjin will use the layout template that was set when creating the Tenjin instance (via the 'layout' configuration
 option). If you want to use a different layout template (or if you haven't defined a layout
 template when creating the Tenjin instance), then you must add the layout template's name
 to the context as '_layout'. You can also just pass the layout template's name as C<$use_layout>,
-which has precendence over C<< $context->{_layout} >>. If C<$use_layout> is 0 or undefined,
+which has precedence over C<< $context->{_layout} >>. If C<$use_layout> is 0 or undefined,
 then a layout template will not be used, even if C<< $context->{_layout} >> is defined.
 
 Please note that by default file templates are cached on disk (with a '.cache') extension.
@@ -205,7 +204,26 @@ sub render {
 =head2 register_template( $template_name, $template )
 
 Receives the name of a template and its L<Tenjin::Template> object
-and stores it in memory for usage by the engine.
+and stores it in memory for usage by the engine. This is useful if you
+need to use templates that are not stored on the file system, for example
+from a database.
+
+Note, however, that you need to pass a template object who's already been
+converted and compiled into Perl code, so if you have a template with a
+certain name and certain text, these are the steps you will need to perform:
+
+	# create a Tenjin instance
+	my $tenjin = Tenjin->new(\%options);
+	
+	# create an empty template object
+	my $template = Tenjin::Template->new();
+	
+	# compile template content into Perl code
+	$template->convert($tmpl_content);
+	$template->compile();
+
+	# register the template with the Tenjin instance
+	$tenjin->register_template($tmpl_name, $template);
 
 =cut
 
@@ -223,7 +241,7 @@ sub register_template {
 Receives the name of a template and the context object and tries to find
 that template in the engine's memory. If it's not there, it will try to find
 it in the file system (the cache file might be loaded, if present). Returns
-the templates L<Tenjin::Template> object.
+the template's L<Tenjin::Template> object.
 
 =cut
 
@@ -410,7 +428,7 @@ L<http://www.kuwata-lab.com/tenjin/pltenjin-examples.html> for examples, and
 L<http://www.kuwata-lab.com/tenjin/pltenjin-faq.html> for frequently asked questions.
 
 Note that the Perl version of Tenjin is refered to as plTenjin on the Tenjin website,
-and that, as oppose to this module, the website suggests using a .plhtml extension
+and that, as opposed to this module, the website suggests using a .plhtml extension
 for the templates instead of .html (this is entirely your choice).
 
 L<Tenjin::Template>, L<Catalyst::View::Tenjin>, L<Dancer::Template::Tenjin>.
