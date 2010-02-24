@@ -74,11 +74,12 @@ instead of internally.
 
 =back
 
-To make it clear, this version of Tenjin might somehow divert from the
-original Tenjin's roadmap. Although my aim is to be as compatible as
-possible (and this version is always updated with features and changes
-from the original), I cannot guarantee it. Please note that version 0.05
-(and above) of this module is NOT backwards compatible with previous versions.
+To make it clear, the CPAN version of Tenjin might find itself diverting
+a bit in the future from the original Tenjin's roadmap. Although my aim
+is to be as compatible as possible (and this version is always updated
+with features and changes from the original), I cannot guarantee it (but I'll
+do my best). Please note that version 0.05 (and above) of this module is
+NOT backwards compatible with previous versions.
 
 =head1 METHODS
 
@@ -475,21 +476,32 @@ accidentaly missing in version 0.05, and the ability to call the utility
 methods of L<Tenjin::Util> natively inside templates. You will want to
 remove your templates' .cache files when upgrading to 0.6 too.
 
-=head1 TODO
+=head1 AUTHOR
+
+The CPAN version of Tenjin was forked by Ido Perlmuter E<lt>ido at ido50.netE<gt>
+from version 0.0.2 of the original plTenjin, which is developed by Makoto Kuwata
+at L<http://www.kuwata-lab.com/tenjin/>.
+
+=head1 ACKNOWLEDGEMENTS
+
+I would like to thank the following people for their contributions:
 
 =over
 
-=item * Expand pod documentation and properly document the code, which is
-hard to understand as it is.
+=item * Makoto Kuwata
 
-=item * Create tests, adapted from the tests provided by the original Tenjin.
+The original developer of Tenjin.
+
+=item * John Beppu E<lt>beppu at cpan.orgE<gt>
+
+For introducing me to Tenjin and helping me understand the way it's designed.
+
+=item * Pedro Melo E<lt>melo at cpan.orgE<gt>
+
+For helping me understand the logic behind some of the original Tenjin aspects
+and helping me fix bugs and create tests.
 
 =back
-
-=head1 AUTHOR
-
-Tenjin is developed by Makoto Kuwata at L<http://www.kuwata-lab.com/tenjin/>.
-The CPAN version was tidied and CPANized from the original 0.0.2 source (with later updates from Makoto Kuwata's tenjin github repository) by Ido Perlmuter E<lt>ido@ido50.netE<gt>.
 
 =head1 BUGS
 

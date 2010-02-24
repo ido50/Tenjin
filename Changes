@@ -1,5 +1,11 @@
 Revision history for Perl extension Tenjin
 
+0.061	2010-02-24 17:00:00
+	- Restored the ability to nest layout templates
+	- Restored the layou templates precedence to the same used in plTenjin
+	- Renamed the context variable back to $_context
+	- Added some real CPAN tests to the distro
+
 0.06	2010-02-24 12:30:00
 	- Restored the layout template feature which went MIA on 0.05
 	- Broadened the documentation for the layout template feature

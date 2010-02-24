@@ -1,18 +1,21 @@
-use inc::Module::Install 0.77;
+use strict;
+use warnings;
+use ExtUtils::MakeMaker;
 
-if ( -e 'MANIFEST.SKIP' ) {
-    system( 'pod2text lib/Tenjin.pm > README' );
-}
-
-perl_version '5.008';
-
-name 'Tenjin';
-all_from 'lib/Tenjin.pm';
-
-requires 'Encode' => 0;
-requires 'HTML::Entities' => 0;
-
-test_requires 'Test::More';
-
-auto_install;
-WriteAll;
+WriteMakefile(
+    NAME                => 'Tenjin',
+    AUTHOR              => q{Ido Perlmuter <ido@ido50.net>},
+    VERSION_FROM        => 'lib/Tenjin.pm',
+    ABSTRACT_FROM       => 'lib/Tenjin.pm',
+    ($ExtUtils::MakeMaker::VERSION >= 6.3002
+      ? ('LICENSE'=> 'perl')
+      : ()),
+    PL_FILES            => {},
+    PREREQ_PM		=> {
+        'Test::More'		=> 0,
+        'Encode'		=> 0,
+        'HTML::Entities'	=> 0,
+    },
+    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    clean               => { FILES => 'Tenjin-*' },
+);
