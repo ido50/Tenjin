@@ -257,7 +257,7 @@ sub _decode_params {
 	return $s;
 }
 
-__PACKAGE__;
+1;
 
 __END__
 

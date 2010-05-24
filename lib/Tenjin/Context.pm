@@ -197,7 +197,7 @@ information.
 *tagattrs = *Tenjin::Util::tagattrs;
 *new_cycle = *Tenjin::Util::new_cycle;
 
-__PACKAGE__;
+1;
 
 __END__
 

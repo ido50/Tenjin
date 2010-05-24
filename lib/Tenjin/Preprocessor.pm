@@ -46,7 +46,7 @@ sub add_expr {
 	$self->SUPER::add_expr($bufref, $expr, $flag_escape);
 }
 
-__PACKAGE__;
+1;
 
 __END__
 

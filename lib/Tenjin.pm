@@ -7,7 +7,7 @@ use Tenjin::Preprocessor;
 use strict;
 use warnings;
 
-our $VERSION = 0.061;
+our $VERSION = 0.070;
 our $USE_STRICT = 0;
 our $ENCODING = 'utf8';
 our $BYPASS_TAINT   = 1; # unset if you like taint mode
@@ -15,6 +15,8 @@ our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
 our $TIMESTAMP_INTERVAL = 10;
+our $DO_NOT_DIE = 0;
+our $ERROR = undef; # will hold an error message, if encountered
 
 =head1 NAME
 
@@ -33,11 +35,21 @@ Tenjin - Fast templating engine with support for embedded Perl.
 					# so there's no need to do this if your
 					# templates really are utf8.
 
+	$Tenjin::DO_NOT_DIE = 1;	# do not die when encoutering a problem
+					# when rendering (such as a syntax error
+					# in your templates) but simply return
+					# an undef value from the render method
+
 	my $engine = Tenjin->new(\%options);
 	my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
 	my $filename = 'file.html';
 	my $output = $engine->render($filename, $context);
 	print $output;
+	
+	# if $Tenjin::DO_NOT_DIE = 1, you can display errors with your
+	# own methods (or not at all). For example:
+	return $engine->render($filename, $context)
+		|| $self->print_tenjin_error($engine->error);
 
 =head1 VERSION
 
@@ -116,6 +128,10 @@ off by default).
 =item * B<encoding> - Another way to set the encoding of your template files (set to utf8
 by default).
 
+=item * B<dontdie> - Another way to set the error mode of Tenjin (set to
+0 by default, so Tenjin dies upon error messages; pass a true value to
+make Tenjin return an C<undef> value upon error instead).
+
 =back
 
 =cut
@@ -124,7 +140,7 @@ sub new {
 	my ($class, $options) = @_;
 
 	my $self = {};
-	foreach (qw[prefix postfix layout path cache preprocess templateclass strict encoding]) {
+	foreach (qw[prefix postfix layout path cache preprocess templateclass strict encoding dontdie]) {
 		$self->{$_} = delete $options->{$_};
 	}
 	$self->{cache} = 1 unless defined $self->{cache};
@@ -133,12 +149,9 @@ sub new {
 	$self->{prefix} = '' unless $self->{prefix};
 	$self->{postfix} = '' unless $self->{postfix};
 
-	if ($self->{encoding}) {
-		$Tenjin::ENCODING = $self->{encoding};
-	}
-	if (defined $self->{strict}) {
-		$Tenjin::USE_STRICT = $self->{strict};
-	}
+	$Tenjin::ENCODING = $self->{encoding} if $self->{encoding};
+	$Tenjin::USE_STRICT = $self->{strict} if defined $self->{strict};
+	$Tenjin::DO_NOT_DIE = $self->{dontdie} if defined $self->{dontdie};
 
 	return bless $self, $class;
 }
@@ -173,10 +186,31 @@ Tenjin automatically deprecates these cache files every 10 seconds. If you
 find this value is too low, you can override the C<$Tenjin::TIMESTAMP_INTERVAL>
 variable with your preferred value.
 
+If the template fails to render (mostly happens due to syntax errors in the
+embedded Perl code, or undefined objects), behaviour will depend upon
+the value of the C<$Tenjin::DO_NOT_DIE> variable. If it is set to 0 (the
+default), then the method will C<die> with a message about what caused the
+error. This will either cause your application to C<die> as well, or - in
+the case you're using something like L<Catalyst> or L<Dancer> - it will be
+caught by the application and taken care of in its own way (which usually
+means displaying an ugly error message). If C<$Tenjin::DO_NOT_DIE> is set
+to a true value, then this method will simply return an C<undef> value,
+and the error message will be available via the C<error()> method. This gives
+you the flexiblity to due whatever you want in case an error was encountered,
+but bear in mind that you actually need to do so (i.e. check if C<render()>
+returned an C<undef> value and do something about it), otherwise your
+application won't work as expected.
+
 =cut
 
 sub render {
 	my ($self, $template_name, $_context, $use_layout) = @_;
+
+	# we must have a template name
+	unless (defined $template_name) {
+		$Tenjin::ERROR = "No template name supplied to render.";
+		return undef;
+	}
 
 	$_context ||= {};
 	$_context->{'_engine'} = $self;
@@ -188,14 +222,23 @@ sub render {
 	# then render the layout template with the original output, and
 	# keep doing so if the layout template in itself is nested
 	# inside other layout templates until there are no layouts left
-	my $output;
+	my $output = ''; # initialization meant to prevent returning undef
+			 # when output actually should be empty
 	while ($template_name) {
 		# get the template
 		my $template = $self->get_template($template_name, $_context); # pass $_context only for preprocessing
 		
-		# render the template and cache errors
+		# render the template and catch errors
 		$output = $template->_render($_context);
-		die("*** ERROR: $template->{filename}\n", $@) if $@;
+		
+		if ($@) {
+			# an error was encountered, what should we do?
+			$Tenjin::ERROR = $@;
+			
+			return undef if $Tenjin::DO_NOT_DIE;
+			
+			die("*** ERROR: $template_name\n", $self->error);
+		}
 		
 		# should we nest into a layout template?
 		# check if $use_layout is 0, and if so bolt
@@ -430,7 +473,21 @@ sub create_template {
 	return $template;
 }
 
-__PACKAGE__;
+=head2 error()
+
+Returns the text of the last error message encountered when attempting
+to render a template. This method should probably only be used along with
+the "do not die" mode (e.g. C<$Tenjin::DO_NOT_DIE = 1>), in which Tenjin
+will not die with an error message during failed rendering, but only return
+an C<undef> value.
+
+=cut
+
+sub error {
+	$Tenjin::ERROR;
+}
+
+1;
 
 __END__
 

@@ -82,16 +82,15 @@ C<$var> with C<< $var->{str} >>.
 sub new {
 	my ($class, $filename, $opts) = @_;
 
-	my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
-	my $rawclass   = defined($opts) && exists($opts->{rawclass}) ? $opts->{rawclass} : undef;
+	$opts ||= {};
 
 	my $self = bless {
-		'filename'   => $filename,
-		'script'     => undef,
-		'escapefunc' => $escapefunc,
-		'rawclass'   => $rawclass,
-		'timestamp'  => undef,
-		'args'       => undef,
+		filename	=> $filename,
+		script		=> undef,
+		escapefunc	=> $opts->{escape_func},
+		rawclass	=> $opts->{rawclass},
+		timestamp	=> undef,
+		args		=> undef,
 	}, $class;
 	
 	$self->convert_file($filename) if $filename;
@@ -107,8 +106,11 @@ might happen since templates have and are Perl code), then the error
 will trigger a C<die>!
 
 If you do not want to C<die> when encountering errors in templates, or wish
-to cache the errors yourself (as the L<Tenjin> engine does itself), then you
+to catch the errors yourself (as the L<Tenjin> engine does itself), then you
 need to call L<_render()|_render( [$_context] )> instead.
+
+This method ignores the C<$Tenjin::DO_NOT_DIE> variable and will C<die>
+when encountering an error no matter what its value is.
 
 =cut
 
@@ -116,7 +118,7 @@ sub render {
 	my $self = shift;
 
 	my $output = $self->_render(@_);
-	if ($@) {  # error happened
+	if ($@) { # error happened
 		my $template_filename = $self->{filename};
 		die "Tenjin::Template: \"Error rendering " . $self->{filename} . "\"\n", $@;
 	}
@@ -535,7 +537,7 @@ sub _write_file {
 	close(OUT);
 }
 
-__PACKAGE__;
+1;
 
 __END__
 
