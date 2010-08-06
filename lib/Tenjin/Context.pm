@@ -3,6 +3,7 @@ package Tenjin::Context;
 use strict;
 use warnings;
 use Tenjin::Util;
+use Carp;
 
 =head1 NAME
 
@@ -63,23 +64,20 @@ sub new {
 	return bless $self, $class;
 }
 
-=head2 evaluate( $script, [$filename] )
+=head2 evaluate( $script, $template_name )
 
 This method receives a compiled template and actually performes the evaluation
 the renders it, then returning the rendered output. If Tenjin is configured
 to C<use strict>, the script will be C<eval>ed under C<use strict>.
 
-If the rendered template's filename is passed, a Perl comment noting that filename
-will be appended to the script prior to its evaluation.
-
 =cut
 
 sub evaluate {
-	my ($self, $script, $filename) = @_;
+	my ($self, $script, $name) = @_;
 
 	my $_context = $self;
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
-	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
+	my $s = $name ? "# line 1 \"$name\"\n" : '';  # line directive
 	$s .= $script;
 
 	my $ret;
@@ -90,6 +88,8 @@ sub evaluate {
 		$ret = eval($s);
 		use strict;
 	}
+
+	croak "[Tenjin] Failed rendering $name: $@" if $@;
 	
 	return $ret;
 }
@@ -103,10 +103,10 @@ is called when compiling the template.
 =cut
 
 sub to_func {
-	my ($self, $script, $filename) = @_;
+	my ($self, $script, $name) = @_;
 
 	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
-	my $s = $filename ? "# line 1 \"$filename\"\n" : '';  # line directive
+	my $s = $name ? "# line 1 \"$name\"\n" : '';  # line directive
 	$s .= "sub { my (\$_context) = \@_; $script }";
 	
 	my $ret;
@@ -117,6 +117,8 @@ sub to_func {
 		$ret = eval($s);
 		use strict;
 	}
+
+	croak "[Tenjin] Failed compiling $name: $@" if $@;
 	
 	return $ret;
 }
@@ -198,8 +200,6 @@ information.
 *new_cycle = *Tenjin::Util::new_cycle;
 
 1;
-
-__END__
 
 =head1 SEE ALSO
 

@@ -2,7 +2,6 @@ package Tenjin::Util;
 
 use strict;
 use warnings;
-use Encode;
 use HTML::Entities;
 
 =head1 NAME
@@ -258,8 +257,6 @@ sub _decode_params {
 }
 
 1;
-
-__END__
 
 =head1 SEE ALSO
 

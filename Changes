@@ -1,5 +1,18 @@
 Revision history for Perl extension Tenjin
 
+{{$NEXT}}
+	- Tenjin now croaks instead of dies, and only inside the context
+	  class (the evaluate and to_func methods).
+	- The _render internal method was removed as it's not needed anymore
+	- Every template object now has the template's name, not just the
+	  file name. This is good for non-file templates and allows croaking
+	  with a message that gives more info about the location of the error.
+	- Added a new test that simply attempts to catch a croak in an
+	  intentionally "faulty" template.
+	- Removed the Encode dependency from Tenjin::Util as it wasn't
+	  even used.
+	- Migrated distribution to use Dist::Zilla
+
 0.061	2010-02-24 17:00:00
 	- Restored the ability to nest layout templates
 	- Restored the layou templates precedence to the same used in plTenjin

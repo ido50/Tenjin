@@ -19,9 +19,6 @@ SYNOPSIS
             my $output = $engine->render($filename, $context);
             print $output;
 
-VERSION
-    0.061
-
 DESCRIPTION
     Tenjin is a very fast and full-featured templating engine, implemented
     in several programming languages, among them Perl.
@@ -239,6 +236,9 @@ AUTHOR
     The CPAN version of Tenjin was forked by Ido Perlmuter <ido at
     ido50.net> from version 0.0.2 of the original plTenjin, which is
     developed by Makoto Kuwata at <http://www.kuwata-lab.com/tenjin/>.
+
+    Development of Tenjin is done with github at
+    <http://github.com/ido50/Tenjin>.
 
 ACKNOWLEDGEMENTS
     I would like to thank the following people for their contributions:

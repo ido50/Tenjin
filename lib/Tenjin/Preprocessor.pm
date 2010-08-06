@@ -48,8 +48,6 @@ sub add_expr {
 
 1;
 
-__END__
-
 =head1 SEE ALSO
 
 L<Tenjin>, L<Tenjin::Template>.

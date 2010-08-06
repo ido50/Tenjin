@@ -3,6 +3,7 @@ package Tenjin::Template;
 use strict;
 use warnings;
 use Fcntl qw/:flock/;
+use Carp;
 
 =head1 NAME
 
@@ -80,17 +81,19 @@ C<$var> with C<< $var->{str} >>.
 =cut
 
 sub new {
-	my ($class, $filename, $opts) = @_;
+	my ($class, $filename, $template_name, $opts) = @_;
 
-	$opts ||= {};
+	my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
+	my $rawclass   = defined($opts) && exists($opts->{rawclass}) ? $opts->{rawclass} : undef;
 
 	my $self = bless {
-		filename	=> $filename,
-		script		=> undef,
-		escapefunc	=> $opts->{escape_func},
-		rawclass	=> $opts->{rawclass},
-		timestamp	=> undef,
-		args		=> undef,
+		'filename'   => $filename,
+		'name'       => $template_name,
+		'script'     => undef,
+		'escapefunc' => $escapefunc,
+		'rawclass'   => $rawclass,
+		'timestamp'  => undef,
+		'args'       => undef,
 	}, $class;
 	
 	$self->convert_file($filename) if $filename;
@@ -102,37 +105,12 @@ sub new {
 
 Renders the template, possibly with a context hash-ref, and returns the
 rendered output. If errors have occured when rendering the template (which
-might happen since templates have and are Perl code), then the error
-will trigger a C<die>!
-
-If you do not want to C<die> when encountering errors in templates, or wish
-to catch the errors yourself (as the L<Tenjin> engine does itself), then you
-need to call L<_render()|_render( [$_context] )> instead.
-
-This method ignores the C<$Tenjin::DO_NOT_DIE> variable and will C<die>
-when encountering an error no matter what its value is.
+might happen since templates have and are Perl code), then this method
+will croak.
 
 =cut
 
 sub render {
-	my $self = shift;
-
-	my $output = $self->_render(@_);
-	if ($@) { # error happened
-		my $template_filename = $self->{filename};
-		die "Tenjin::Template: \"Error rendering " . $self->{filename} . "\"\n", $@;
-	}
-	return $output;
-}
-
-=head2 _render( [$_context] )
-
-Renders the template, possibly with a context hash-ref, and returns the
-rendered output.
-
-=cut
-
-sub _render {
 	my ($self, $_context) = @_;
 
 	$_context ||= {};
@@ -140,12 +118,17 @@ sub _render {
 	if ($self->{func}) {
 		return $self->{func}->($_context);
 	} else {
-		if (ref($_context) eq 'HASH') {
-			$_context = $Tenjin::CONTEXT_CLASS->new($_context);
-		}
+		$_context = $Tenjin::CONTEXT_CLASS->new($_context) if ref $_context eq 'HASH';			
+
 		my $script = $self->{script};
 		$script = $_context->_build_decl() . $script unless $self->{args};
-		return $_context->evaluate($script, $self->{filename});
+		
+		# rendering is actually done inside the context object
+		# with the evaluate method. We pass either the name of
+		# the template or the filename of the template for debug
+		# purposes
+		
+		return $_context->evaluate($script, $self->{filename} || $self->{name});
 	}
 }
 
@@ -277,8 +260,8 @@ sub hook_stmt {
 			foreach my $arg (split(/,/, $argstr)) {
 				$arg =~ s/(^\s+|\s+$)//g;
 				next unless $arg;
-				$arg =~ m/\A([\$\@\%])?([a-zA-Z_]\w*)\Z/ or die("Tenjin::Template: \"$arg: invalid template argument.\"");
-				die "Tenjin::Template: \"$arg: only '\$var' is available for template argument.\"" unless (!$1 || $1 eq '$');
+				$arg =~ m/\A([\$\@\%])?([a-zA-Z_]\w*)\Z/ or croak "[Tenjin] $arg: invalid template argument.";
+				croak "[Tenjin] $arg: only '\$var' is available for template argument." unless (!$1 || $1 eq '$');
 				my $name = $2;
 				push(@args, $name);
 				push(@declares, "my \$$name = \$_context->{$name}; ");
@@ -407,7 +390,7 @@ sub stop_text_part {
 sub add_text {
 	my ($self, $bufref, $text) = @_;
 
-	return undef unless $text;
+	return unless $text;
 	$text =~ s/[`\\]/\\$&/g;
 	my $is_start = $bufref->[0] =~ / \$_buf \.= \Z/;
 	$bufref->[0] .= $is_start ? "q`$text`" : " . q`$text`";
@@ -469,11 +452,10 @@ sub compile {
 	my $self = shift;
 
 	if ($self->{args}) {
-		my $func = $Tenjin::CONTEXT_CLASS->to_func($self->{script}, $self->{filename});
-		die "Tenjin::Template: \"Error compiling " . $self->{filename} . "\"\n", $@ if $@;
-		return $self->{func} = $func;
+		$self->{func} = $Tenjin::CONTEXT_CLASS->to_func($self->{script}, $self->{name});
+		return $self->{func};
 	}
-	return undef;
+	return;
 }
 
 =head2 escaped_expr( $expr )
@@ -507,7 +489,7 @@ file will be locked for reading.
 sub _read_file {
 	my ($self, $filename, $lock_required) = @_;
 
-	open(IN, $filename) or die("Tenjin::Template: Can't open $filename for reading: $!");
+	open(IN, $filename) or croak "[Tenjin] Can't open $filename for reading: $!";
 	binmode(IN);
 	flock(IN, LOCK_SH) if $lock_required;
 
@@ -530,7 +512,7 @@ locked exclusively when writing.
 sub _write_file {
 	my ($self, $filename, $content, $lock_required) = @_;
 
-	open(OUT, ">$filename") or die("Tenjin::Template: \"Can't open $filename for writing: $!\"");
+	open(OUT, ">$filename") or croak "[Tenjin] Can't open $filename for writing: $!";
 	binmode(OUT);
 	flock(OUT, LOCK_EX) if $lock_required;
 	print OUT $content;
@@ -538,8 +520,6 @@ sub _write_file {
 }
 
 1;
-
-__END__
 
 =head1 SEE ALSO
 
