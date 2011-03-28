@@ -1,5 +1,7 @@
 package Tenjin;
 
+# ABSTRACT: Fast templating engine with support for embedded Perl.
+
 use strict;
 use warnings;
 use Carp;
@@ -8,6 +10,9 @@ use Tenjin::Context;
 use Tenjin::Template;
 use Tenjin::Preprocessor;
 
+our $VERSION = "0.070_001";
+$VERSION = eval $VERSION;
+
 our $USE_STRICT = 0;
 our $ENCODING = 'utf8';
 our $BYPASS_TAINT   = 1; # unset if you like taint mode
@@ -15,8 +20,6 @@ our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
 our $TIMESTAMP_INTERVAL = 10;
-
-# ABSTRACT: Fast templating engine with support for embedded Perl.
 
 =head1 NAME
 
@@ -43,7 +46,8 @@ Tenjin - Fast templating engine with support for embedded Perl.
 
 =head1 DESCRIPTION
 
-Tenjin is a very fast and full-featured templating engine, implemented in several programming languages, among them Perl.
+Tenjin is a very fast and full-featured templating engine, implemented in
+several programming languages, among them Perl.
 
 The Perl version of Tenjin supports embedded Perl code, nestable layout template,
 inclusion of other templates inside a template, capturing parts of or the entire
@@ -538,7 +542,7 @@ L<http://search.cpan.org/dist/Tenjin/>
 
 Tenjin is licensed under the MIT license.
 
-	Copyright (c) 2007-2010 the aforementioned authors.
+	Copyright (c) 2007-2011 the aforementioned authors.
 
 	Permission is hereby granted, free of charge, to any person obtaining
 	a copy of this software and associated documentation files (the

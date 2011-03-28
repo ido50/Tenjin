@@ -7,8 +7,7 @@ use Carp;
 
 =head1 NAME
 
-Tenjin::Template - A Tenjin template object, either built from a file
-or from memory.
+Tenjin::Template - A Tenjin template object, either built from a file or from memory.
 
 =head1 SYNOPSIS
 
