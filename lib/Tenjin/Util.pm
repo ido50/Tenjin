@@ -4,6 +4,9 @@ use strict;
 use warnings;
 use HTML::Entities;
 
+our $VERSION = "0.070001";
+$VERSION = eval $VERSION;
+
 =head1 NAME
 
 Tenjin::Util - Utility methods for Tenjin.

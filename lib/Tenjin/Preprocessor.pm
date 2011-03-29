@@ -3,6 +3,9 @@ package Tenjin::Preprocessor;
 use strict;
 use warnings;
 
+our $VERSION = "0.070001";
+$VERSION = eval $VERSION;
+
 our @ISA = ('Tenjin::Template');
 
 =head1 NAME

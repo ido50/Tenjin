@@ -10,7 +10,7 @@ use Tenjin::Context;
 use Tenjin::Template;
 use Tenjin::Preprocessor;
 
-our $VERSION = "0.070";
+our $VERSION = "0.070001";
 $VERSION = eval $VERSION;
 
 our $USE_STRICT = 0;

@@ -5,6 +5,9 @@ use warnings;
 use Fcntl qw/:flock/;
 use Carp;
 
+our $VERSION = "0.070001";
+$VERSION = eval $VERSION;
+
 =head1 NAME
 
 Tenjin::Template - A Tenjin template object, either built from a file or from memory.

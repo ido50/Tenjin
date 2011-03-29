@@ -1,6 +1,10 @@
 Revision history for Perl extension Tenjin
 
 {{$NEXT}}
+	- Added version numbers to all modules (not just Tenjin.pm) as the CPAN
+	  indexer failed.
+
+0.070     2011-03-29 21:31:14 Asia/Jerusalem
 	- Tenjin now properly decodes template input and encodes template output
 	  according to the user's selected encoding
 	- Default encoding now spelled UTF-8 instead of utf8
