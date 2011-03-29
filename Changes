@@ -1,6 +1,10 @@
 Revision history for Perl extension Tenjin
 
 {{$NEXT}}
+	- Tenjin now properly decodes template input and encodes template output
+	  according to the user's selected encoding
+	- Default encoding now spelled UTF-8 instead of utf8
+	- Added t/encoding.t to test template encoding
 
 0.062     2010-08-06 20:49:28 Asia/Jerusalem
 	- Tenjin now croaks instead of dies, and only inside the context

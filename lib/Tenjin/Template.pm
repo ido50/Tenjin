@@ -488,8 +488,8 @@ file will be locked for reading.
 sub _read_file {
 	my ($self, $filename, $lock_required) = @_;
 
-	open(IN, $filename) or croak "[Tenjin] Can't open $filename for reading: $!";
-	binmode(IN);
+	open(IN, "<:encoding($Tenjin::ENCODING)", $filename)
+		or croak "[Tenjin] Can't open $filename for reading: $!";
 	flock(IN, LOCK_SH) if $lock_required;
 
 	read(IN, my $content, -s $filename);
@@ -511,8 +511,10 @@ locked exclusively when writing.
 sub _write_file {
 	my ($self, $filename, $content, $lock_required) = @_;
 
-	open(OUT, ">$filename") or croak "[Tenjin] Can't open $filename for writing: $!";
-	binmode(OUT);
+	my $enc = $Tenjin::ENCODING eq 'UTF-8' ? '>:utf8' : ">:encoding($Tenjin::ENCODING)";
+
+	open(OUT, $enc, $filename)
+		or croak "[Tenjin] Can't open $filename for writing: $!";
 	flock(OUT, LOCK_EX) if $lock_required;
 	print OUT $content;
 	close(OUT);

@@ -8,10 +8,10 @@ SYNOPSIS
                                             # your templates. Recommended, but not used
                                             # by default.
 
-            $Tenjin::ENCODING = "utf8";     # set the encoding of your template files
-                                            # to utf8. This is the default encoding used
+            $Tenjin::ENCODING = "UTF-8";    # set the encoding of your template files
+                                            # to UTF-8. This is the default encoding used
                                             # so there's no need to do this if your
-                                            # templates really are utf8.
+                                            # templates really are UTF-8.
 
             my $engine = Tenjin->new(\%options);
             my $context = { title => 'Tenjin Example', items => [qw/AAA BBB CCC/] };
@@ -40,7 +40,9 @@ DESCRIPTION
     *   Support for rendering templates from non-file sources (such as a
         database) is added.
 
-    *   Ability to set the encoding of your templates is added.
+    *   Ability to set the encoding of your templates is added (Tenjin will
+        decode template files according to this encoding; by default, Tenjin
+        will decode
 
     *   HTML is encoded and decoded using the HTML::Entities module, instead
         of internally.
@@ -53,6 +55,24 @@ DESCRIPTION
     with features and changes from the original), I cannot guarantee it (but
     I'll do my best). Please note that version 0.05 (and above) of this
     module is NOT backwards compatible with previous versions.
+
+  A NOTE ABOUT ENCODING
+    When Tenjin opens template files, it will automatically decode their
+    contents according to the selected encoding (UTF-8 by default), so make
+    sure your template files are properly encoded. Tenjin also writes cache
+    files of compiled template structure. These will be automatically
+    encoded according to the selected encoding.
+
+    When it comes to UTF-8, it might interest you to know how Tenjin
+    behaves:
+
+    1. "UTF-8" is the default encoding used. If for some reason, either
+    before running "Tenjin->new()" or during, you provide an alternate
+    spelling (such as "utf8" or "UTF8"), Tenjin will convert it to UTF-8.
+    2. When reading files, Tenjin uses "<:encoding(UTF-8)", while when
+    writing files, Tenjin uses ">:utf8", as recommended by this article
+    <https://secure.wikimedia.org/wikibooks/en/w/index.php?title=Perl_Progra
+    mming/Unicode_UTF-8&oldid=2020796>.
 
 METHODS
   new( \%options )
@@ -85,7 +105,7 @@ METHODS
         (turned off by default).
 
     *   encoding - Another way to set the encoding of your template files
-        (set to utf8 by default).
+        (set to "UTF-8" by default).
 
   render( $tmpl_name, [\%_context, $use_layout] )
     Renders a template whose name is identified by $tmpl_name. Remember that
@@ -290,7 +310,7 @@ SUPPORT
 LICENSE AND COPYRIGHT
     Tenjin is licensed under the MIT license.
 
-            Copyright (c) 2007-2010 the aforementioned authors.
+            Copyright (c) 2007-2011 the aforementioned authors.
 
             Permission is hereby granted, free of charge, to any person obtaining
             a copy of this software and associated documentation files (the
