@@ -354,7 +354,7 @@ sub parse_expr {
 		$self->add_expr($bufref, $expr, $flag_escape) if $expr;
 		if ($delete_newline) {
 			my $end = $+[0];
-			if (substr($input, $end + 1, 1) eq "\n") {
+			if (substr($input, $end, 1) eq "\n") {
 				$bufref->[0] .= "\n";
 				$pos++;
 			}
