@@ -79,7 +79,7 @@ sub evaluate {
 	my ($self, $script, $name) = @_;
 
 	my $_context = $self;
-	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+	$script = ($script =~ /\A(.*)\Z/s) && $1 if $Tenjin::BYPASS_TAINT;
 	my $s = $name ? "# line 1 \"$name\"\n" : '';  # line directive
 	$s .= $script;
 
@@ -108,7 +108,7 @@ is called when compiling the template.
 sub to_func {
 	my ($self, $script, $name) = @_;
 
-	$script = ($script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+	$script = ($script =~ /\A(.*)\Z/s) && $1 if $Tenjin::BYPASS_TAINT;
 	my $s = $name ? "# line 1 \"$name\"\n" : '';  # line directive
 	$s .= "sub { my (\$_context) = \@_; $script }";
 	

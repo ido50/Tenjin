@@ -349,7 +349,7 @@ sub parse_expr {
 		my $start = $-[0];
 		my $text = substr($input, $pos, $start - $pos);
 		my ($expr, $flag_escape, $delete_newline) = $self->get_expr_and_escapeflag($1, $2, $3);
-		$pos = $start + length($&);
+		$pos = $+[0];
 		$self->add_text($bufref, $text) if $text;
 		$self->add_expr($bufref, $expr, $flag_escape) if $expr;
 		if ($delete_newline) {
@@ -393,7 +393,7 @@ sub add_text {
 	my ($self, $bufref, $text) = @_;
 
 	return unless $text;
-	$text =~ s/[`\\]/\\$&/g;
+	$text =~ s/([`\\])/\\$1/g;
 	my $is_start = $bufref->[0] =~ / \$_buf \.= \Z/;
 	$bufref->[0] .= $is_start ? "q`$text`" : " . q`$text`";
 }
