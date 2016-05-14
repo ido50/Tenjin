@@ -1,6 +1,15 @@
 Revision history for Perl extension Tenjin
 
 {{$NEXT}}
+    - Avoid using $& since it leads to performance penalty for all regexp
+      matches in code using this library (Mark Hindess)
+    - Fixes for performance bug and off-by-one error in delete newline
+      syntax (Mark Hindess)
+    - Small documentation fixes
+    - Move bug tracker to GitHub
+    - Bump version to 1.0.0
+
+0.070001  2011-03-29 21:38:04 Asia/Jerusalem
 	- Added version numbers to all modules (not just Tenjin.pm) as the CPAN
 	  indexer failed.
 
@@ -64,4 +73,4 @@ Revision history for Perl extension Tenjin
 	- Added the MIT license file to the distribution.
 
 0.03    2009-07-26 20:20:00
-        - Initial release adapted from plTenjin's original 0.0.2 source.
+    - Initial release adapted from plTenjin's original 0.0.2 source.

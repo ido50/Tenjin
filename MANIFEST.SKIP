@@ -15,3 +15,4 @@
 ^Tenjin-.*$
 ^\.build.*$
 ^.+\.cache$
+^MYMETA\..*$

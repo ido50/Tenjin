@@ -10,7 +10,7 @@ use Tenjin::Context;
 use Tenjin::Template;
 use Tenjin::Preprocessor;
 
-our $VERSION = "0.070001";
+our $VERSION = "1.000000";
 $VERSION = eval $VERSION;
 
 our $USE_STRICT = 0;
@@ -218,10 +218,10 @@ sub render {
 	while ($template_name) {
 		# get the template
 		my $template = $self->get_template($template_name, $_context); # pass $_context only for preprocessing
-		
+
 		# render the template
 		$output = $template->render($_context);
-		
+
 		# should we nest into a layout template?
 		# check if $use_layout is 0, and if so bolt
 		# check if $_context->{_layout} is defined, and if so use it
@@ -253,10 +253,10 @@ certain name and certain text, these are the steps you will need to perform:
 
 	# create a Tenjin instance
 	my $tenjin = Tenjin->new(\%options);
-	
+
 	# create an empty template object
 	my $template = Tenjin::Template->new();
-	
+
 	# compile template content into Perl code
 	$template->convert($tmpl_content);
 	$template->compile();
@@ -388,7 +388,7 @@ sub cachename {
 
 =head2 store_cachefile( $cachename, $template )
 
-Receives the name of a template cache file and the corrasponding template
+Receives the name of a template cache file and the corresponding template
 object, and creates the cache file on disk.
 
 =cut
@@ -406,7 +406,7 @@ sub store_cachefile {
 
 =head2 load_cachefile( $cachename, $template )
 
-Receives the name of a template cache file and the corrasponding template
+Receives the name of a template cache file and the corresponding template
 object, reads the cache file and stores it in the template object (as 'script').
 
 =cut
@@ -464,7 +464,7 @@ L<http://www.kuwata-lab.com/tenjin/pltenjin-users-guide.html> for detailed usage
 L<http://www.kuwata-lab.com/tenjin/pltenjin-examples.html> for examples, and
 L<http://www.kuwata-lab.com/tenjin/pltenjin-faq.html> for frequently asked questions.
 
-Note that the Perl version of Tenjin is refered to as plTenjin on the Tenjin website,
+Note that the Perl version of Tenjin is referred to as plTenjin on the Tenjin website,
 and that, as opposed to this module, the website suggests using a .plhtml extension
 for the templates instead of .html (this is entirely your choice).
 
@@ -495,17 +495,15 @@ templates structure and WILL cause your application to fail if present.
 =back
 
 Version 0.06 (this version) restored the layout template feature which was
-accidentaly missing in version 0.05, and the ability to call the utility
+accidentally missing in version 0.05, and the ability to call the utility
 methods of L<Tenjin::Util> natively inside templates. You will want to
 remove your templates' .cache files when upgrading to 0.6 too.
 
 =head1 AUTHOR
 
-The CPAN version of Tenjin was forked by Ido Perlmuter E<lt>ido at ido50.netE<gt>
-from version 0.0.2 of the original plTenjin, which is developed by Makoto Kuwata
-at L<http://www.kuwata-lab.com/tenjin/>.
+Ido Perlmuter E<lt>ido at ido50.netE<gt>
 
-Development of Tenjin is done with github at L<http://github.com/ido50/Tenjin>.
+Forked from plTenjin 0.0.2 by Makoto Kuwata (L<http://www.kuwata-lab.com/tenjin/>).
 
 =head1 ACKNOWLEDGEMENTS
 
@@ -530,9 +528,7 @@ and helping me fix bugs and create tests.
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-tenjin at rt.cpan.org>,
-or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Tenjin>.  I will be notified, and then you'll automatically be notified of progress
-on your bug as I make changes.
+    Please report any bugs or feature requests on the L<GitHub project page|https://github.com/ido50/Tenjin/issues>.
 
 =head1 SUPPORT
 
@@ -540,33 +536,13 @@ You can find documentation for this module with the perldoc command.
 
     perldoc Tenjin
 
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tenjin>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Tenjin>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Tenjin>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Tenjin/>
-
-=back
+You can also read the documentation online on L<metacpan|https://metacpan.org/pod/Tenjin>.
 
 =head1 LICENSE AND COPYRIGHT
 
 Tenjin is licensed under the MIT license.
 
-	Copyright (c) 2007-2011 the aforementioned authors.
+	Copyright (c) 2007-2016 the aforementioned authors.
 
 	Permission is hereby granted, free of charge, to any person obtaining
 	a copy of this software and associated documentation files (the
