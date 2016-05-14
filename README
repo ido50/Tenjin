@@ -157,10 +157,10 @@ METHODS
 
             # create a Tenjin instance
             my $tenjin = Tenjin->new(\%options);
-        
+
             # create an empty template object
             my $template = Tenjin::Template->new();
-        
+
             # compile template content into Perl code
             $template->convert($tmpl_content);
             $template->compile();
@@ -197,11 +197,11 @@ INTERNAL METHODS
     (which will simply be $filename with '.cache' appended to it.
 
   store_cachefile( $cachename, $template )
-    Receives the name of a template cache file and the corrasponding
+    Receives the name of a template cache file and the corresponding
     template object, and creates the cache file on disk.
 
   load_cachefile( $cachename, $template )
-    Receives the name of a template cache file and the corrasponding
+    Receives the name of a template cache file and the corresponding
     template object, reads the cache file and stores it in the template
     object (as 'script').
 
@@ -220,7 +220,7 @@ SEE ALSO
     and <http://www.kuwata-lab.com/tenjin/pltenjin-faq.html> for frequently
     asked questions.
 
-    Note that the Perl version of Tenjin is refered to as plTenjin on the
+    Note that the Perl version of Tenjin is referred to as plTenjin on the
     Tenjin website, and that, as opposed to this module, the website
     suggests using a .plhtml extension for the templates instead of .html
     (this is entirely your choice).
@@ -248,17 +248,15 @@ CHANGES
         present.
 
     Version 0.06 (this version) restored the layout template feature which
-    was accidentaly missing in version 0.05, and the ability to call the
+    was accidentally missing in version 0.05, and the ability to call the
     utility methods of Tenjin::Util natively inside templates. You will want
     to remove your templates' .cache files when upgrading to 0.6 too.
 
 AUTHOR
-    The CPAN version of Tenjin was forked by Ido Perlmuter <ido at
-    ido50.net> from version 0.0.2 of the original plTenjin, which is
-    developed by Makoto Kuwata at <http://www.kuwata-lab.com/tenjin/>.
+    Ido Perlmuter <ido at ido50.net>
 
-    Development of Tenjin is done with github at
-    <http://github.com/ido50/Tenjin>.
+    Forked from plTenjin 0.0.2 by Makoto Kuwata
+    (<http://www.kuwata-lab.com/tenjin/>).
 
 ACKNOWLEDGEMENTS
     I would like to thank the following people for their contributions:
@@ -278,39 +276,20 @@ ACKNOWLEDGEMENTS
         Tenjin aspects and helping me fix bugs and create tests.
 
 BUGS
-    Please report any bugs or feature requests to "bug-tenjin at
-    rt.cpan.org", or through the web interface at
-    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Tenjin>. I will be
-    notified, and then you'll automatically be notified of progress on your
-    bug as I make changes.
+        Please report any bugs or feature requests on the L<GitHub project page|https://github.com/ido50/Tenjin/issues>.
 
 SUPPORT
     You can find documentation for this module with the perldoc command.
 
         perldoc Tenjin
 
-    You can also look for information at:
-
-    *   RT: CPAN's request tracker
-
-        <http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tenjin>
-
-    *   AnnoCPAN: Annotated CPAN documentation
-
-        <http://annocpan.org/dist/Tenjin>
-
-    *   CPAN Ratings
-
-        <http://cpanratings.perl.org/d/Tenjin>
-
-    *   Search CPAN
-
-        <http://search.cpan.org/dist/Tenjin/>
+    You can also read the documentation online on metacpan
+    <https://metacpan.org/pod/Tenjin>.
 
 LICENSE AND COPYRIGHT
     Tenjin is licensed under the MIT license.
 
-            Copyright (c) 2007-2011 the aforementioned authors.
+            Copyright (c) 2007-2016 the aforementioned authors.
 
             Permission is hereby granted, free of charge, to any person obtaining
             a copy of this software and associated documentation files (the

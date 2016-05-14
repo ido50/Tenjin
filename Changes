@@ -1,6 +1,8 @@
 Revision history for Perl extension Tenjin
 
 {{$NEXT}}
+
+1.000000  2016-05-14 20:18:01+03:00 Asia/Jerusalem
     - Avoid using $& since it leads to performance penalty for all regexp
       matches in code using this library (Mark Hindess)
     - Fixes for performance bug and off-by-one error in delete newline
