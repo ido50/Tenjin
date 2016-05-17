@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use HTML::Entities;
 
-our $VERSION = "1.000000";
+our $VERSION = "1.000001";
 $VERSION = eval $VERSION;
 
 =head1 NAME

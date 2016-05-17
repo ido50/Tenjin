@@ -5,7 +5,7 @@ use warnings;
 use Fcntl qw/:flock/;
 use Carp;
 
-our $VERSION = "1.000000";
+our $VERSION = "1.000001";
 $VERSION = eval $VERSION;
 
 =head1 NAME
@@ -106,7 +106,7 @@ sub new {
 =head2 render( [$_context] )
 
 Renders the template, possibly with a context hash-ref, and returns the
-rendered output. If errors have occured when rendering the template (which
+rendered output. If errors have occurred when rendering the template (which
 might happen since templates have and are Perl code), then this method
 will croak.
 

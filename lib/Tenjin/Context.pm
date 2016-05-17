@@ -5,7 +5,7 @@ use warnings;
 use Tenjin::Util;
 use Carp;
 
-our $VERSION = "1.000000";
+our $VERSION = "1.000001";
 $VERSION = eval $VERSION;
 
 =head1 NAME
