@@ -1,6 +1,7 @@
 Revision history for Perl extension Tenjin
 
 {{$NEXT}}
+    - Small typo fix in Tenjin::Template
 
 1.000000  2016-05-14 20:18:01+03:00 Asia/Jerusalem
     - Avoid using $& since it leads to performance penalty for all regexp
